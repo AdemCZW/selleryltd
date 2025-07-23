@@ -141,5 +141,7 @@ CSP_DEFAULT_SRC = ("'self'",)
 CSP_SCRIPT_SRC = ("'self'", "'unsafe-eval'", "https://cdnjs.cloudflare.com")
 CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net")
 
-
-DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+# Override database settings from DATABASE_URL, preserving default if unset
+db_config = dj_database_url.config(conn_max_age=600, ssl_require=True)
+if db_config:
+    DATABASES['default'].update(db_config)
