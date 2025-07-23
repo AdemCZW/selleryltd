@@ -1,0 +1,15 @@
+{
+  // Use ESLint as default formatter for JS
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "[javascript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  // Disable built-in formatter for JS/TS
+  "javascript.format.enable": false,
+  "typescript.format.enable": false,
+  // Run ESLint (and all fixAll) on save
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "always",
+    "source.fixAll.eslint": "always"
+  }
+}

@@ -1,0 +1,595 @@
+/* Minimalist Theme */
+
+:root {
+    --bg-color: #f8f9fa;
+    --card-bg-color: #ffffff;
+    --text-color: #212529;
+    --muted-text-color: #6c757d;
+    --border-color: #dee2e6;
+    --primary-color: #007bff;
+    --primary-hover-color: #0056b3;
+    --accent-color: #6c757d;
+    --accent-hover-color: #5a6268;
+    --danger-color: #dc3545;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    --font-main: 'Microsoft JhengHei', sans-serif;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+* {
+    font-family: var(--font-main) !important;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+.calendar-container {
+    max-width: 1920px;
+    margin: 40px auto;
+    padding: 0 24px;
+}
+
+
+/* Cards */
+
+.calendar-card,
+.card,
+#selected-date-section .card {
+    background-color: var(--card-bg-color) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    box-shadow: var(--shadow) !important;
+    padding: 24px;
+    transition: box-shadow 0.3s ease;
+}
+
+.calendar-card:hover,
+.card:hover {
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.08);
+}
+
+
+/* Header */
+
+.calendar-header {
+    background: none !important;
+    border: none !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    border-radius: 0 !important;
+    padding: 16px 0 !important;
+    margin-bottom: 24px !important;
+    text-align: center;
+}
+
+.calendar-header #week-range {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-color);
+    text-shadow: none;
+}
+
+
+/* Navigation Buttons */
+
+.calendar-nav-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50% !important;
+    background: var(--card-bg-color) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--shadow) !important;
+    transition: all 0.3s ease;
+}
+
+.calendar-nav-btn:hover {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+    transform: translateY(-2px);
+}
+
+
+/* Calendar Table */
+
+#calendar-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 4px;
+}
+
+#calendar-table thead th {
+    background: none !important;
+    color: var(--muted-text-color) !important;
+    border: none !important;
+    padding: 12px 8px;
+    text-align: center;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+
+#calendar-table tbody td {
+    background: none;
+    border: none;
+    padding: 2px;
+    text-align: center;
+    vertical-align: middle;
+    height: auto;
+}
+
+
+/* Calendar Day */
+
+.calendar-day-span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 40px;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-color);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.calendar-day-span:hover {
+    background-color: #e9ecef;
+    border-color: #e9ecef;
+}
+
+.calendar-today .calendar-day-span {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.calendar-selected .calendar-day-span {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+}
+
+.calendar-sat .calendar-day-span {
+    color: var(--primary-color);
+}
+
+.calendar-sun .calendar-day-span {
+    color: var(--danger-color);
+}
+
+
+/* Brand Hours */
+
+.brand-hours-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--card-bg-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 16px 24px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    margin: 0 0 24px 0;
+}
+
+.brand-hours-card:before {
+    content: '\f201';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    color: var(--primary-color);
+    font-size: 1.8rem;
+}
+
+
+/* Selected Date Display */
+
+.selected-date-display {
+    background: none;
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+}
+
+.selected-date-display .fw-bold {
+    font-size: 0.9rem;
+    color: var(--muted-text-color);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.selected-date-display #selected-date {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-color);
+    text-shadow: none;
+}
+
+
+/* Form Elements */
+
+.form-section {
+    margin-bottom: 16px;
+    padding: 0;
+    background: none;
+    border: none;
+    border-left: none;
+}
+
+.form-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-color);
+}
+
+#employee-select,
+#room-input,
+input[type="time"] {
+    background-color: var(--card-bg-color) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    padding: 10px 12px !important;
+    font-size: 0.9rem !important;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#employee-select:focus,
+#room-input:focus,
+input[type="time"]:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15) !important;
+}
+
+
+/* Buttons */
+
+.btn-group {
+    width: 100%;
+}
+
+.btn-group .btn {
+    border: 1px solid var(--border-color) !important;
+    background-color: var(--card-bg-color);
+    color: var(--text-color);
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.btn-check:checked+.btn-outline-primary,
+.btn-check:checked+.btn-outline-success {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+}
+
+.btn-primary {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+    border-radius: 8px !important;
+    padding: 10px 20px;
+    font-weight: 600;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover-color) !important;
+    border-color: var(--primary-hover-color) !important;
+}
+
+
+/* Daily Schedule Table */
+
+.table {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.table th,
+.table td {
+    padding: 12px 16px !important;
+    font-size: 0.9rem !important;
+    vertical-align: middle !important;
+    border: none !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+.table thead th {
+    background-color: var(--bg-color) !important;
+    font-weight: 600;
+    color: var(--muted-text-color);
+}
+
+.table tr:last-child td {
+    border-bottom: none !important;
+}
+
+a.text-danger {
+    color: var(--danger-color) !important;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+a.text-danger:hover {
+    text-decoration: underline;
+}
+
+
+/* Weekly Summary */
+
+#weekly-summary {
+    border-collapse: separate;
+    border-spacing: 8px;
+}
+
+#weekly-summary td {
+    padding: 0;
+    vertical-align: top;
+    min-width: 180px;
+}
+
+.room-schedule-block {
+    background-color: var(--card-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+    animation: none !important;
+    /* Remove breathing animation */
+    width: 100%;
+    min-width: 180px;
+    box-sizing: border-box;
+    position: relative;
+    /* For status icons */
+}
+
+.room-schedule-block:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow);
+}
+
+.room-header {
+    font-weight: 700;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.95rem;
+    color: var(--text-color);
+    text-shadow: none;
+}
+
+.roles-container {
+    display: flex;
+    gap: 12px;
+}
+
+.role-column {
+    flex: 1;
+}
+
+.role-column strong {
+    display: block;
+    margin-bottom: 8px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--muted-text-color);
+    border: none;
+    padding-bottom: 0;
+}
+
+.role-content {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.anchor-role,
+.anchor-content {
+    color: var(--primary-color) !important;
+    font-weight: 600;
+    text-shadow: none;
+}
+
+.operator-role,
+.operator-content {
+    color: var(--accent-color) !important;
+    font-weight: 600;
+    text-shadow: none;
+}
+
+.role-separator {
+    width: 1px;
+    background-color: var(--border-color);
+    margin: 0 8px;
+}
+
+.no-schedule {
+    color: var(--muted-text-color);
+    padding: 24px 0;
+    font-size: 0.9rem;
+}
+
+
+/* Notifications */
+
+.notification {
+    position: fixed;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 14px 20px;
+    transition: top 0.5s ease, opacity 0.5s ease;
+    opacity: 0;
+    z-index: 10000;
+}
+
+
+/* Show class triggers slide down and fade in */
+
+.notification.show {
+    top: 20px;
+    opacity: 1;
+}
+
+.notification.success {
+    background: var(--success-color);
+}
+
+.notification.error {
+    background: var(--danger-color);
+}
+
+.notification.delete {
+    background: var(--warning-color);
+    color: var(--text-color);
+}
+
+
+/* Cancel Sidebar */
+
+#cancel-sidebar {
+    background-color: var(--card-bg-color) !important;
+    color: var(--text-color);
+    border-left: 1px solid var(--border-color);
+    width: 280px;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+}
+
+#cancel-sidebar .sidebar-header {
+    background-color: var(--primary-color);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#cancel-sidebar .sidebar-header h5 {
+    color: white;
+    font-weight: 600;
+}
+
+#cancel-sidebar .form-check-label {
+    color: var(--text-color) !important;
+}
+
+#cancel-sidebar .form-switch .form-check-input:checked+.form-check-label {
+    background-color: var(--primary-color) !important;
+    color: var(--card-bg-color) !important;
+}
+
+
+/* Remove complex animations and gradients */
+
+.calendar-header::before,
+.selected-date-display::before,
+.calendar-nav-btn::before,
+.calendar-day-span::before,
+#employee-role-section .btn-group .btn::before,
+#time-section .btn-primary::before,
+#schedule-upload-form .btn-primary::before,
+.schedule-table thead th::after,
+.schedule-table thead th::before {
+    display: none !important;
+}
+
+.room-schedule-block,
+.employee-col,
+.role-col,
+.time-col,
+.room-col {
+    animation: none !important;
+    box-shadow: none !important;
+}
+
+
+/* Status Icons (Late Cancel & Completed) */
+
+.late-cancel-warning,
+.complete-check {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.late-cancel-warning {
+    background-color: var(--danger-color);
+}
+
+.complete-check {
+    background-color: var(--success-color);
+}
+
+
+/* Brand Name in Room Block */
+
+.room-brand-name {
+    position: absolute;
+    bottom: -10px;
+    left: -10px;
+    background-color: var(--card-bg-color);
+    /* Use currentColor to allow inline style color */
+    color: currentColor;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    z-index: 10;
+}
+
+
+/* Responsive Adjustments */
+
+@media (max-width: 768px) {
+    .calendar-container {
+        margin: 24px auto;
+        padding: 0 16px;
+    }
+    #weekly-summary td {
+        min-width: 150px;
+    }
+    .room-schedule-block {
+        min-width: 150px;
+    }
+    .table th,
+    .table td {
+        padding: 8px 10px !important;
+        font-size: 0.85rem !important;
+    }
+}

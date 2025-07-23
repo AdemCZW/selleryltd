@@ -1,0 +1,82 @@
+<!DOCTYPE html> {% load static %}
+<html lang="zh-TW">
+
+<head>
+    <meta charset="utf-8">
+    <title>新增員工</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{% static 'liveapp/css/date_form.css' %}" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 56px;
+        }
+        /* Navbar styled like date_form */
+        
+        .navbar {
+            background-color: var(--card-bg-color) !important;
+            border-bottom: 1px solid var(--border-color) !important;
+            box-shadow: var(--shadow) !important;
+        }
+        
+        .navbar-brand,
+        .nav-link {
+            color: var(--text-color) !important;
+            font-family: var(--font-main) !important;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+        
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #007bff;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            z-index: 1000;
+        }
+        
+        .back-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">功能選單</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'date_form' %}">月曆</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'brand_create' %}">新增品牌</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'invoice_create' %}">新增發票</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'person_create' %}">新增員工</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'person_list' %}">員工系統</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <a href="{% url 'person_list' %}" class="back-btn" title="回到列表">&#x1F3E0;</a>
+    <div class="container mt-4">
+        <h1 class="mb-4">新增員工</h1>
+        <form method="post">
+            {% csrf_token %} {{ form.as_p }}
+            <button type="submit" class="btn btn-primary mb-3">儲存</button>
+            <a href="{% url 'person_list' %}" class="btn btn-secondary mb-3 ms-2">取消</a>
+        </form>
+    </div>
+</body>
+
+</html>
