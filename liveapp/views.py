@@ -65,6 +65,8 @@ def person_create(request):
                 return JsonResponse({'success': False, 'error': f'表單驗證失敗：{form.errors}'})
             else:
                 messages.error(request, f"員工表單驗證失敗：{form.errors}")
+            # 如果表單驗證失敗，保留輸入的資料
+            return render(request, 'liveapp/person_form.html', {'form': form})
     else:
         form = PersonForm()
     return render(request, 'liveapp/person_form.html', {'form': form})
