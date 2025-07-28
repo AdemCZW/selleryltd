@@ -143,13 +143,8 @@ CSP_SCRIPT_SRC = ("'self'", "'unsafe-eval'", "https://cdnjs.cloudflare.com")
 CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net")
 
 # Configure database
-env_db_url = os.getenv('DATABASE_URL')
-if env_db_url:
-    # Production: use DATABASE_URL with SSL
-    db_config = dj_database_url.config(default=env_db_url, conn_max_age=600, ssl_require=True)
-else:
-    # Development: fallback to local sqlite
-    default_sqlite = f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}"
-    db_config = dj_database_url.parse(default_sqlite)
+
+# Remove unsupported key if present (e.g., db_type)
+
 # Update default database config
 DATABASES['default'].update(db_config)
