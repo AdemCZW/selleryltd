@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_time
-from .models import Person, Invoice, Schedule, Brand
+from .models import Person, Invoice, Schedule, Brand, Company
 from .forms import PersonForm, InvoiceForm, InvoiceItemFormSet, ScheduleForm, BrandForm
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
@@ -99,9 +99,16 @@ def invoice_create(request):
     # include all persons for bank details lookup
     # prepare person choices and selected bank info
     persons = Person.objects.all()
+    companies = Company.objects.all()
+    
     # prepare JSON data for frontend bank info lookup
     persons_data = list(persons.values('id','bank','bank_name','account','sort_code'))
     persons_data_json = json.dumps(persons_data)
+    
+    # prepare JSON data for company address lookup
+    companies_data = list(companies.values('id', 'name', 'address'))
+    companies_data_json = json.dumps(companies_data)
+    
     # determine selected person id: from form initial or first person
     selected_id = None
     if request.method == 'POST':
@@ -122,12 +129,14 @@ def invoice_create(request):
         'form': form,
         'formset': formset,
         'persons': persons,
+        'companies': companies,
         'selected_person': selected_person,
         'bank': bank,
         'bank_name': bank_name,
         'account': account,
         'sort_code': sort_code,
         'persons_data_json': persons_data_json,
+        'companies_data_json': companies_data_json,
     })
 
 

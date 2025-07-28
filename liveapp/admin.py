@@ -1,6 +1,12 @@
 from django.contrib import admin
-from .models import Person, Invoice, InvoiceItem, Schedule
+from .models import Person, Invoice, InvoiceItem, Schedule, Company
 from .models import Brand
+
+# 註冊 Company 模型
+@admin.register(Company)
+class CompanyAdmin(admin.ModelAdmin):
+    list_display = ('name', 'address')
+    search_fields = ('name', 'address')
 
 # 註冊 Person 模型
 

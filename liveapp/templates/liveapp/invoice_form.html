@@ -93,11 +93,11 @@
     <div class="container mt-4">
         <div id="invoice-content">
             <h1 class="mb-4">Invoice_Payment for </h1>
-            <div class="mb-3">
-                <strong>Bill to:</strong> Sellery LTD (Company No.: 1553171) Address: 19-21 Great Tower Street, London EC3R5AQ, United Kingdom
+            <div class="mb-3" id="bill-to-section">
+                <strong>Bill to:</strong> <span id="bill-to-info">請選擇公司</span>
             </div>
             <div class="mb-3">
-                <strong>Invoice Number:</strong> 20250722172350
+                <strong>Invoice Number:</strong> <span id="invoice-number">載入中...</span>
             </div>
             <form id="invoice-form" method="post">
                 {{ formset.management_form }}
@@ -119,7 +119,13 @@
                         </select>
                     </div>
                     <div class="col-md-4 mb-3">
-                        {{ form.company.label_tag }} {{ form.company }}
+                        {{ form.company.label_tag }}
+                        <select id="id_company" name="company" class="form-control">
+                            <option value="">選擇公司</option>
+                            {% for c in companies %}
+                                <option value="{{ c.id }}" data-address="{{ c.address }}">{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="col-md-4 mb-3">
                         {{ form.date.label_tag }} {{ form.date }}
@@ -213,43 +219,74 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Generate Invoice Number based on UK date and time
+            function generateInvoiceNumber() {
+                const now = new Date();
+                const ukTime = new Date(now.toLocaleString("en-US", {
+                    timeZone: "Europe/London"
+                }));
+
+                const year = ukTime.getFullYear();
+                const month = String(ukTime.getMonth() + 1).padStart(2, '0');
+                const day = String(ukTime.getDate()).padStart(2, '0');
+                const hours = String(ukTime.getHours()).padStart(2, '0');
+                const minutes = String(ukTime.getMinutes()).padStart(2, '0');
+                const seconds = String(ukTime.getSeconds()).padStart(2, '0');
+
+                return `${year}${month}${day}${hours}${minutes}${seconds}`;
+            }
+
+            // Set the invoice number
+            document.getElementById('invoice-number').textContent = generateInvoiceNumber();
+
             // PDF export/preview shared settings
-            const pdfOptions = {
-                margin: [10, 10, 10, 10],
-                filename: 'invoice.pdf',
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    // Hide action buttons in cloned document for PDF
-                    onclone: (clonedDoc) => {
-                        ['add-item', 'preview-pdf-btn', 'download-pdf-btn'].forEach(id => {
-                            const el = clonedDoc.getElementById(id);
-                            if (el) el.style.display = 'none';
-                        });
-                        // hide save button by name attribute
-                        clonedDoc.querySelectorAll('button[name="save"]').forEach(btn => btn.style.display = 'none');
-                        // Strip all non-text elements, leaving only plain text
-                        const container = clonedDoc.getElementById('invoice-content');
-                        const text = container.innerText;
-                        container.innerHTML = '';
-                        text.split(/\n+/).forEach(line => {
-                            if (line.trim()) {
-                                const p = clonedDoc.createElement('p');
-                                p.textContent = line.trim();
-                                container.appendChild(p);
-                            }
-                        });
+            function getPdfOptions() {
+                const headingEl = document.querySelector('#invoice-content h1');
+                const title = headingEl ? headingEl.textContent.trim() : 'Invoice_Payment';
+                // Replace spaces and special characters for filename
+                const filename = title.replace(/\s+/g, '_').replace(/[^\w\-_.]/g, '') + '.pdf';
+
+                return {
+                    margin: [10, 10, 10, 10],
+                    filename: filename,
+                    html2canvas: {
+                        scale: 2,
+                        useCORS: true,
+                        // Hide action buttons in cloned document for PDF
+                        onclone: (clonedDoc) => {
+                            ['add-item', 'preview-pdf-btn', 'download-pdf-btn'].forEach(id => {
+                                const el = clonedDoc.getElementById(id);
+                                if (el) el.style.display = 'none';
+                            });
+                            // hide save button by name attribute
+                            clonedDoc.querySelectorAll('button[name="save"]').forEach(btn => btn.style.display = 'none');
+                            // Strip all non-text elements, leaving only plain text
+                            const container = clonedDoc.getElementById('invoice-content');
+                            const text = container.innerText;
+                            container.innerHTML = '';
+                            text.split(/\n+/).forEach(line => {
+                                if (line.trim()) {
+                                    const p = clonedDoc.createElement('p');
+                                    p.textContent = line.trim();
+                                    container.appendChild(p);
+                                }
+                            });
+                        }
+                    },
+                    jsPDF: {
+                        unit: 'mm',
+                        format: 'a4',
+                        orientation: 'portrait'
                     }
-                },
-                jsPDF: {
-                    unit: 'mm',
-                    format: 'a4',
-                    orientation: 'portrait'
-                }
-            };
+                };
+            }
             // Grab person select and heading elements
             const personSelect = document.getElementById('id_person');
+            const companySelect = document.getElementById('id_company');
+            const addressField = document.getElementById('id_address');
+            const billToInfo = document.getElementById('bill-to-info');
             const heading = document.querySelector('#invoice-content h1');
+
             // Function to fill bank details based on selected option's data attributes
             function fillBankDetails() {
                 const selectedOption = personSelect.options[personSelect.selectedIndex];
@@ -258,15 +295,43 @@
                 document.getElementById('account').value = selectedOption.dataset.account || '';
                 document.getElementById('sort_code').value = selectedOption.dataset.sortCode || '';
             }
+
+            // Function to fill address based on selected company
+            function fillCompanyAddress() {
+                const selectedOption = companySelect.options[companySelect.selectedIndex];
+                if (addressField) {
+                    addressField.value = selectedOption.dataset.address || '';
+                }
+
+                // Update Bill to info
+                if (billToInfo) {
+                    const companyId = selectedOption.value;
+                    if (companyId) {
+                        const companyName = selectedOption.text;
+                        const companyAddress = selectedOption.dataset.address || '';
+                        billToInfo.textContent = `${companyName}, Address: ${companyAddress}`;
+                    } else {
+                        billToInfo.textContent = '請選擇公司';
+                    }
+                }
+            }
+
             // Function to update heading and bank details when selection changes
             function updateHeading() {
                 const name = personSelect.options[personSelect.selectedIndex].text;
                 heading.textContent = 'Invoice_Payment for ' + name;
                 fillBankDetails();
             }
+
             if (personSelect) {
                 personSelect.addEventListener('change', updateHeading);
                 updateHeading(); // initial update if default selected
+            }
+
+            if (companySelect) {
+                companySelect.addEventListener('change', fillCompanyAddress);
+                // Initialize Bill-to info on page load
+                fillCompanyAddress();
             }
             // Handle adding item rows
             const container = document.getElementById('formset-container');
@@ -341,13 +406,13 @@
             // Preview PDF by opening full document in a new tab
             document.getElementById('preview-pdf-btn').addEventListener('click', async e => {
                 e.preventDefault();
-                const blob = await html2pdf().set(pdfOptions).from(document.getElementById('invoice-content')).outputPdf('blob');
+                const blob = await html2pdf().set(getPdfOptions()).from(document.getElementById('invoice-content')).outputPdf('blob');
                 const url = URL.createObjectURL(blob);
                 window.open(url, '_blank');
             });
             // Download PDF with same settings
             document.getElementById('download-pdf-btn').addEventListener('click', () => {
-                html2pdf().set(pdfOptions).from(document.getElementById('invoice-content')).save();
+                html2pdf().set(getPdfOptions()).from(document.getElementById('invoice-content')).save();
             });
         });
     </script>
