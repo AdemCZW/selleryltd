@@ -1,1 +1,1 @@
-web: gunicorn selleryltd.wsgi
+web: python -m gunicorn selleryltd.wsgi
