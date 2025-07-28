@@ -85,8 +85,8 @@ WSGI_APPLICATION = 'selleryltd.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 # Database configuration: use DATABASE_URL for production, fallback to SQLite locally
-DATABASE_URL = os.environ.get('DATABASE_URL')
-if DATABASE_URL:
+DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://postgres:AJNHgknUkPaAfpjIDJPhSHnpPpwKsKrx@postgres.railway.internal:5432/railway')
+if DATABASE_URL and not DATABASE_URL.startswith('sqlite'):
     DATABASES = {
         'default': dj_database_url.config(
             default=DATABASE_URL,
