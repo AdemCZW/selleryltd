@@ -64,7 +64,8 @@ ROOT_URLCONF = 'selleryltd.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        # Add project-level templates directory
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -142,9 +143,3 @@ CSP_DEFAULT_SRC = ("'self'",)
 CSP_SCRIPT_SRC = ("'self'", "'unsafe-eval'", "https://cdnjs.cloudflare.com")
 CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net")
 
-# Configure database
-
-# Remove unsupported key if present (e.g., db_type)
-
-# Update default database config
-DATABASES['default'].update(db_config)
