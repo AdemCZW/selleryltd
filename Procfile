@@ -1,1 +1,1 @@
-web: python -m gunicorn selleryltd.wsgi
+web: python manage.py migrate && gunicorn selleryltd.wsgi
