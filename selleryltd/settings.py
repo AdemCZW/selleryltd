@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-_1tt-2x+c4&p2%i8op4us8k)y)6=8p1pmt5#dy7#61!es87p%0
 DEBUG = True
 # Allow all hosts in production (adjust as needed)
 # Allow all hosts in production (adjust as needed)
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*','127.0.0.1', 'localhost','selleryltd-production.up.railway.app', 'selleryltd.railway.app']
 # Trusted origins for CSRF
 CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app']
 
