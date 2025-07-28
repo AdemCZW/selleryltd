@@ -14,4 +14,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 ENV PYTHONUNBUFFERED=1
 
 # 執行遷移並啟動 Gunicorn 伺服器
-CMD ["sh", "-c", "python3 manage.py migrate && gunicorn selleryltd.wsgi:application --bind 0.0.0.0:8080"]
+CMD ["sh", "-c", "python manage.py migrate && gunicorn selleryltd.wsgi:application --bind 0.0.0.0:8080"]
