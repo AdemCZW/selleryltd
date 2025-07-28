@@ -85,7 +85,7 @@ WSGI_APPLICATION = 'selleryltd.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.parse('postgresql://postgres:AJNHgknUkPaAfpjIDJPhSHnpPpwKsKrx@autorack.proxy.rlwy.net:34165/railway')
+    'default': dj_database_url.parse('postgresql://postgres:AJNHgknUkPaAfpjIDJPhSHnpPpwKsKrx@postgres.railway.internal:5432/railway')
 }
 
 
