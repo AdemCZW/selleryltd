@@ -138,7 +138,8 @@ CSP_DEFAULT_SRC = ("'self'",)
 CSP_SCRIPT_SRC = ("'self'", "'unsafe-eval'", "https://cdnjs.cloudflare.com")
 CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net")
 
-# Override database settings from DATABASE_URL, preserving default if unset
-db_config = dj_database_url.config(conn_max_age=600, ssl_require=True)
-if db_config:
-    DATABASES['default'].update(db_config)
+# Configure database from DATABASE_URL or fallback to sqlite
+default_db_url = os.getenv('DATABASE_URL') or f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}"
+db_config = dj_database_url.config(default=default_db_url, conn_max_age=600, ssl_require=True)
+# Update default database config
+DATABASES['default'].update(db_config)
