@@ -47,10 +47,24 @@ def person_create(request):
     if request.method == 'POST':
         form = PersonForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('person_list')
+            try:
+                form.save()
+                # 檢查是否為 AJAX 請求
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'success': True, 'message': '員工新增成功！'})
+                else:
+                    messages.success(request, "員工新增成功！")
+                    return redirect('person_list')
+            except Exception as e:
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'error': f'新增員工失敗：{str(e)}'})
+                else:
+                    messages.error(request, f"新增員工失敗：{str(e)}")
         else:
-            messages.error(request, f"員工表單驗證失敗：{form.errors}")
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': f'表單驗證失敗：{form.errors}'})
+            else:
+                messages.error(request, f"員工表單驗證失敗：{form.errors}")
     else:
         form = PersonForm()
     return render(request, 'liveapp/person_form.html', {'form': form})
