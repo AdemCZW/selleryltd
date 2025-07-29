@@ -46,11 +46,19 @@ def person_list(request):
 def person_create(request):
     if request.method == 'POST':
         form = PersonForm(request.POST)
+        # AJAX submission expects JSON
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if form.is_valid():
             form.save()
+            if is_ajax:
+                return JsonResponse({'success': True, 'message': '新增員工成功'})
             return redirect('person_list')
-        else:
-            messages.error(request, f"員工表單驗證失敗：{form.errors}")
+        # form invalid
+        if is_ajax:
+            # return validation errors as JSON
+            error_text = form.errors.as_text()
+            return JsonResponse({'success': False, 'error': error_text})
+        messages.error(request, f"員工表單驗證失敗：{form.errors}")
     else:
         form = PersonForm()
     return render(request, 'liveapp/person_form.html', {'form': form})
