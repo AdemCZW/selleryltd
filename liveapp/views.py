@@ -13,32 +13,32 @@ from .forms import ScheduleForm
 
 
 def person_list(request):
-    # 計算每位員工在本月份的總時數（不跨月）
+    # Efficient scheduling stats: fetch schedules once and group in Python
+    import datetime
     today = timezone.localdate()
-    current_year = today.year
-    current_month = today.month
+    current_year, current_month = today.year, today.month
+    window_start = today - datetime.timedelta(days=29)
+    # one query for persons
     persons = list(Person.objects.all())
-    import datetime  # for attendance rate calculation
+    # fetch relevant schedules in bulk
+    month_scheds = list(Schedule.objects.filter(date__year=current_year, date__month=current_month))
+    window_scheds = list(Schedule.objects.filter(date__range=(window_start, today)))
+    from collections import defaultdict
+    month_map = defaultdict(list)
+    window_map = defaultdict(list)
+    for s in month_scheds:
+        month_map[s.person_id].append(s)
+    for s in window_scheds:
+        window_map[s.person_id].append(s)
+    # compute stats per person
     for p in persons:
-        # 篩選出本月排班並累加時數與遲到時數
-        monthly_schedules = p.schedule_set.filter(
-            date__year=current_year,
-            date__month=current_month
-        )
-        # 總工作時數
-        total = sum(s.duration for s in monthly_schedules)
-        p.total_hours = round(total, 2)
-        # 總遲到時數
-        late_total = sum(getattr(s, 'late_hours', 0) for s in monthly_schedules)
-        p.monthly_late_hours = round(late_total, 2)
-        # 30-day attendance rate: (scheduled - cancelled) / scheduled
-        window_start = today - datetime.timedelta(days=29)
-        total_window = p.schedule_set.filter(date__range=(window_start, today)).count()
-        cancelled_window = p.schedule_set.filter(date__range=(window_start, today), is_late_cancellation=True).count()
-        if total_window > 0:
-            p.attendance_rate = round((total_window - cancelled_window) / total_window * 100, 2)
-        else:
-            p.attendance_rate = None
+        mlist = month_map.get(p.id, [])
+        p.total_hours = round(sum(s.duration for s in mlist), 2)
+        p.monthly_late_hours = round(sum(s.late_hours for s in mlist), 2)
+        wlist = window_map.get(p.id, [])
+        total_window = len(wlist)
+        cancelled = sum(1 for s in wlist if s.is_late_cancellation)
+        p.attendance_rate = round((total_window - cancelled) / total_window * 100, 2) if total_window > 0 else None
     invoices = Invoice.objects.all()
     return render(request, 'liveapp/person_list.html', {'persons': persons, 'invoices': invoices})
 
