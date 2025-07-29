@@ -27,6 +27,136 @@
         .nav-link:hover {
             color: var(--primary-color) !important;
         }
+        /* Employee table scrollable container */
+        
+        .employee-table-container {
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            overflow: hidden;
+        }
+        
+        .employee-table-header {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .employee-table-header table {
+            margin-bottom: 0;
+            table-layout: fixed;
+            width: 100%;
+        }
+        
+        .employee-table-body {
+            max-height: 336px;
+            /* Height for exactly 8 rows: 8 rows × 42px per row = 336px */
+            overflow-y: auto;
+            background-color: white;
+        }
+        
+        .employee-table-body table {
+            margin-bottom: 0;
+            table-layout: fixed;
+            width: 100%;
+        }
+        /* Ensure both tables have same column widths */
+        
+        .employee-table-header th,
+        .employee-table-body td {
+            width: 9.09%;
+            /* 11 columns = 100/11 = 9.09% each */
+            padding: 6px 6px !important;
+            text-align: left;
+            border-right: 1px solid #dee2e6;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.9rem;
+        }
+        
+        .employee-table-header th:last-child,
+        .employee-table-body td:last-child {
+            border-right: none;
+        }
+        /* Remove Bootstrap striped effect from header */
+        
+        .employee-table-header .table-striped tbody tr:nth-of-type(odd) td {
+            background-color: transparent;
+        }
+        /* Responsive Design */
+        
+        @media (max-width: 1400px) {
+            .employee-table-header th,
+            .employee-table-body td {
+                font-size: 0.8rem;
+                padding: 4px 4px !important;
+            }
+            .employee-table-body {
+                max-height: 304px;
+                /* 8 rows × 38px per row = 304px */
+            }
+        }
+        
+        @media (max-width: 1200px) {
+            .employee-table-container {
+                overflow-x: auto;
+            }
+            .employee-table-header table,
+            .employee-table-body table {
+                min-width: 1000px;
+            }
+            .employee-table-header th,
+            .employee-table-body td {
+                width: auto;
+                min-width: 90px;
+                font-size: 0.75rem;
+                padding: 3px 4px !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .employee-table-container {
+                margin: 0 -15px;
+                border-radius: 0;
+            }
+            .employee-table-header table,
+            .employee-table-body table {
+                min-width: 800px;
+            }
+            .employee-table-header th,
+            .employee-table-body td {
+                min-width: 70px;
+                font-size: 0.7rem;
+                padding: 2px 3px !important;
+            }
+            .employee-table-body {
+                max-height: 264px;
+                /* 8 rows × 33px per row = 264px */
+            }
+            .container {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .employee-table-header table,
+            .employee-table-body table {
+                min-width: 600px;
+            }
+            .employee-table-header th,
+            .employee-table-body td {
+                min-width: 50px;
+                font-size: 0.65rem;
+                padding: 1px 2px !important;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .employee-table-body {
+                max-height: 224px;
+                /* 8 rows × 28px per row = 224px */
+            }
+        }
     </style>
 </head>
 
@@ -49,74 +179,86 @@
         </div>
     </nav>
     <div class="container mt-5">
-        <h1 class="mb-4">員工系統</h1>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>姓名</th>
-                    <th>銀行</th>
-                    <th>帳號</th>
-                    <th>分行代碼</th>
-                    <th>銀行帳戶名稱</th>
-                    <th>發票數量</th>
-                    <th>總金額</th>
-                    <th>總時數（{% now "n月" %}）</th>
-                    <th>遲到時數（小時）</th>
-                    <th>取消</th>
-                    <th>出席率（30天 %）</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for person in persons %}
-                <tr>
-                    <td>{{ person.name }}</td>
-                    <td>{{ person.bank }}</td>
-                    <td>{{ person.account }}</td>
-                    <td>{{ person.sort_code }}</td>
-                    <td>{{ person.bank_name }}</td>
-                    <td>{{ person.invoices.count }}</td>
-                    <td>{{ person.total_amount }}</td>
-                    <td>{{ person.total_hours }}</td>
-                    <td>{{ person.monthly_late_hours }}</td>
-                    <td>{{ person.cancel_count }}</td>
-                    <td>
-                        {% if person.attendance_rate is not None %} {{ person.attendance_rate }}% {% else %} - {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="11">無員工資料。</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <h1 class="mb-4">員工名單</h1>
+        <div class="employee-table-container">
+            <!-- Fixed Header -->
+            <div class="employee-table-header">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Bank</th>
+                            <th>Account</th>
+                            <th>Sort Code</th>
+                            <th>Bank Account Name</th>
+                            <th>Invoice Count</th>
+                            <th>Total Amount</th>
+                            <th>Total Hours ({% now "M月" %})</th>
+                            <th>Late Hours</th>
+                            <th>Cancellations</th>
+                            <th>Attendance Rate (30 days %)</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+            <!-- Scrollable Body -->
+            <div class="employee-table-body">
+                <table class="table table-striped">
+                    <tbody>
+                        {% for person in persons %}
+                        <tr>
+                            <td>{{ person.name }}</td>
+                            <td>{{ person.bank }}</td>
+                            <td>{{ person.account }}</td>
+                            <td>{{ person.sort_code }}</td>
+                            <td>{{ person.bank_name }}</td>
+                            <td>{{ person.invoices.count }}</td>
+                            <td>{{ person.total_amount }}</td>
+                            <td>{{ person.total_hours }}</td>
+                            <td>{{ person.monthly_late_hours }}</td>
+                            <td>{{ person.cancel_count }}</td>
+                            <td>
+                                {% if person.attendance_rate is not None %} {{ person.attendance_rate }}% {% else %} - {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="11">無員工資料。</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
         <h3 class="mt-4">發票列表</h3>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>收據編號</th>
-                    <th>員工</th>
-                    <th>公司</th>
-                    <th>日期</th>
-                    <th>總金額</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for invoice in invoices %}
-                <tr>
-                    <td>{{ invoice.receipt_number }}</td>
-                    <td>{{ invoice.person.name }}</td>
-                    <td>{{ invoice.company }}</td>
-                    <td>{{ invoice.date }}</td>
-                    <td>{{ invoice.total_amount }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5">無發票資料。</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>收據編號</th>
+                        <th>員工</th>
+                        <th>公司</th>
+                        <th>日期</th>
+                        <th>總金額</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in invoices %}
+                    <tr>
+                        <td>{{ invoice.receipt_number }}</td>
+                        <td>{{ invoice.person.name }}</td>
+                        <td>{{ invoice.company }}</td>
+                        <td>{{ invoice.date }}</td>
+                        <td>{{ invoice.total_amount }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">無發票資料。</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </body>
 

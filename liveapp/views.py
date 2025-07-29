@@ -47,26 +47,10 @@ def person_create(request):
     if request.method == 'POST':
         form = PersonForm(request.POST)
         if form.is_valid():
-            try:
-                form.save()
-                # 檢查是否為 AJAX 請求
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({'success': True, 'message': '員工新增成功！'})
-                else:
-                    messages.success(request, "員工新增成功！")
-                    return redirect('person_list')
-            except Exception as e:
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'error': f'新增員工失敗：{str(e)}'})
-                else:
-                    messages.error(request, f"新增員工失敗：{str(e)}")
+            form.save()
+            return redirect('person_list')
         else:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'error': f'表單驗證失敗：{form.errors}'})
-            else:
-                messages.error(request, f"員工表單驗證失敗：{form.errors}")
-            # 如果表單驗證失敗，保留輸入的資料
-            return render(request, 'liveapp/person_form.html', {'form': form})
+            messages.error(request, f"員工表單驗證失敗：{form.errors}")
     else:
         form = PersonForm()
     return render(request, 'liveapp/person_form.html', {'form': form})
@@ -104,11 +88,6 @@ def invoice_create(request):
     # prepare JSON data for frontend bank info lookup
     persons_data = list(persons.values('id','bank','bank_name','account','sort_code'))
     persons_data_json = json.dumps(persons_data)
-    
-    # prepare JSON data for company address lookup
-    companies_data = list(companies.values('id', 'name', 'address'))
-    companies_data_json = json.dumps(companies_data)
-    
     # determine selected person id: from form initial or first person
     selected_id = None
     if request.method == 'POST':
@@ -136,7 +115,6 @@ def invoice_create(request):
         'account': account,
         'sort_code': sort_code,
         'persons_data_json': persons_data_json,
-        'companies_data_json': companies_data_json,
     })
 
 

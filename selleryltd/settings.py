@@ -90,8 +90,8 @@ if DATABASE_URL:
     # 在生產環境中使用提供的 DATABASE_URL
     DATABASES = {
         'default': dj_database_url.config(
- default=DATABASE_URL,
-  conn_max_age=600,
+            default=DATABASE_URL,
+            conn_max_age=600,
             ssl_require=True
         )
     }
