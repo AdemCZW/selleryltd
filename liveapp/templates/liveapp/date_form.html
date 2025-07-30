@@ -1,273 +1,245 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="zh-TW">
+{% extends 'base.html' %} {% load static %} {% block title %}日期表單{% endblock %} {% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<link href="{% static 'liveapp/css/date_form.css' %}" rel="stylesheet">
+<style>
+    #cancel-sidebar .form-check-label {
+        color: #f1f1f1;
+        font-size: 1.1rem;
+    }
+    
+    #cancel-sidebar .form-check-input:checked {
+        background-color: var(--tech-accent1, #0d6efd);
+        border-color: var(--tech-accent1, #0d6efd);
+    }
+    
+    #cancel-sidebar .form-switch {
+        padding-left: 3.5em;
+    }
+    
+    #cancel-sidebar .form-switch .form-check-input {
+        width: 3em;
+        height: 1.5em;
+        margin-left: -3.5em;
+        transition: background-position .2s ease-in-out;
+    }
+    
+    body {
+        padding-top: 56px;
+    }
+</style>
+{% endblock %} {% block content %}
+<div data-selected-date="{{ selected_date_str }}">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日期表單</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-    <link href="{% static 'liveapp/css/date_form.css' %}" rel="stylesheet">
-    <style>
-        #cancel-sidebar .form-check-label {
-            color: #f1f1f1;
-            font-size: 1.1rem;
-            /* 增加文字大小 */
-        }
-        
-        #cancel-sidebar .form-check-input:checked {
-            background-color: var(--tech-accent1, #0d6efd);
-            border-color: var(--tech-accent1, #0d6efd);
-        }
-        /* 放大滑動開關並增加動畫 */
-        
-        #cancel-sidebar .form-switch {
-            padding-left: 3.5em;
-        }
-        
-        #cancel-sidebar .form-switch .form-check-input {
-            width: 3em;
-            height: 1.5em;
-            margin-left: -3.5em;
-            transition: background-position .2s ease-in-out;
-            /* 滑動動畫 */
-        }
-        /* Navbar padding for fixed-top menu */
-        
-        body {
-            padding-top: 56px;
-        }
-    </style>
-</head>
-
-<body data-selected-date="{{ selected_date_str }}">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">功能選單</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="mainNavbar">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="{% url 'date_form' %}">月曆</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'brand_create' %}">新增品牌</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'invoice_create' %}">新增發票</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'person_create' %}">新增員工</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'person_list' %}">員工系統</a></li>
-                </ul>
+    <body data-selected-date="{{ selected_date_str }}">
+        <div class="calendar-container">
+            <div class="calendar-card shadow-lg">
+                <div class="calendar-header d-flex justify-content-between align-items-center mb-3" id="week-header">
+                    <button id="prev-week" class="btn btn-light calendar-nav-btn me-2" title="上一週">&lt;</button>
+                    <span id="week-range"></span>
+                    <button id="next-week" class="btn btn-light calendar-nav-btn ms-2" title="下一週">&gt;</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center align-middle mb-0" id="calendar-table">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>星期一</th>
+                                <th>星期二</th>
+                                <th>星期三</th>
+                                <th>星期四</th>
+                                <th>星期五</th>
+                                <th>星期六</th>
+                                <th>星期日</th>
+                            </tr>
+                        </thead>
+                        <tbody id="calendar-body">
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    </nav>
-    <div class="calendar-container">
-        <div class="calendar-card shadow-lg">
-            <div class="calendar-header d-flex justify-content-between align-items-center mb-3" id="week-header">
-                <button id="prev-week" class="btn btn-light calendar-nav-btn me-2" title="上一週">&lt;</button>
-                <span id="week-range"></span>
-                <button id="next-week" class="btn btn-light calendar-nav-btn ms-2" title="下一週">&gt;</button>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-bordered text-center align-middle mb-0" id="calendar-table">
-                    <thead class="table-primary">
-                        <tr>
-                            <th>星期一</th>
-                            <th>星期二</th>
-                            <th>星期三</th>
-                            <th>星期四</th>
-                            <th>星期五</th>
-                            <th>星期六</th>
-                            <th>星期日</th>
-                        </tr>
-                    </thead>
-                    <tbody id="calendar-body">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="mt-4" id="selected-date-section" style="display:none;">
-            <div class="card p-3">
-                <div class="row">
-                    <div class="col-md-6 border-end mb-2 mb-md-0">
-                        <div class="selected-date-display">
-                            <span class="fw-bold">選擇日期</span>
-                            <div id="selected-date"></div>
-                        </div>
-
-                        <div class="form-section" id="employee-role-section" style="display:none;">
-                            <div class="row">
-                                <div class="col-6"></div>
-                                <label for="employee-select" class="form-label">選擇員工</label>
-                                <select id="employee-select" class="form-select">
-                                        <option value="">請選擇員工</option>
-                                        {% for person in persons %}
-                                        <option value="{{ person.id }}">{{ person.name }}</option>
-                                        {% endfor %}
-                                    </select>
+            <div class="mt-4" id="selected-date-section" style="display:none;">
+                <div class="card p-3">
+                    <div class="row">
+                        <!-- Left column: schedule form -->
+                        <div class="col-md-6 border-end">
+                            <div class="selected-date-display mb-3">
+                                <span class="fw-bold">選擇日期</span>
+                                <div id="selected-date"></div>
                             </div>
-                            <div class="col-6">
+                            <!-- Employee and role selection -->
+                            <div class="form-section mb-4" id="employee-role-section" style="display:none;">
+                                <label for="employee-select" class="form-label">選擇員工</label>
+                                <select id="employee-select" class="form-select mb-3">
+                            <option value="">請選擇員工</option>
+                            {% for person in persons %}
+                            <option value="{{ person.id }}">{{ person.name }}</option>
+                            {% endfor %}
+                        </select>
                                 <label class="form-label">選擇類型</label>
-                                <div class="btn-group d-flex" role="group">
+                                <div class="btn-group d-flex mb-3" role="group">
                                     <input type="radio" class="btn-check" name="role-radio" id="role-anchor" autocomplete="off" value="主播">
                                     <label class="btn btn-outline-primary flex-fill" for="role-anchor">主播</label>
                                     <input type="radio" class="btn-check" name="role-radio" id="role-operator" autocomplete="off" value="運營">
                                     <label class="btn btn-outline-success flex-fill" for="role-operator">運營</label>
                                 </div>
                             </div>
+                            <!-- Time, brand and room form -->
+                            <div class="form-section" id="time-section" style="display:none;">
+                                <label class="form-label">選擇時段</label>
+                                <div class="time-input-grid d-flex gap-2 mb-3">
+                                    <div>
+                                        <label class="form-label" for="start-time">起始</label>
+                                        <input type="time" id="start-time" class="form-control" step="300" value="09:00">
+                                    </div>
+                                    <div>
+                                        <label class="form-label" for="end-time">結束</label>
+                                        <input type="time" id="end-time" class="form-control" step="300" value="18:00">
+                                    </div>
+                                </div>
+                                <form id="schedule-upload-form" method="post" action="">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="date" id="form-date">
+                                    <input type="hidden" name="person" id="form-person">
+                                    <input type="hidden" name="role" id="form-role">
+                                    <input type="hidden" name="start_time" id="form-start-time">
+                                    <input type="hidden" name="end_time" id="form-end-time">
+                                    <div class="mb-3">
+                                        <label for="brand-select" class="form-label">品牌</label>
+                                        <select id="brand-select" name="brand" class="form-select">
+                                    <option value="">請選擇品牌</option>
+                                    {% for brand in brands %}
+                                    <option value="{{ brand.id }}">{{ brand.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="room-input" class="form-label">房間編號</label>
+                                        <input type="number" id="room-input" name="room" class="form-control" value="0" min="0" placeholder="輸入房間編號">
+                                    </div>
+                                    <div class="text-end">
+                                        <button type="submit" class="btn btn-primary px-4">提交排班</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="form-section" id="time-section" style="display:none;">
-                        <label class="form-label">選擇時段</label>
-                        <div class="time-input-grid">
-                            <label for="start-time">起始</label>
-                            <input type="time" id="start-time" class="form-control" step="300" value="09:00">
-                            <label for="end-time">結束</label>
-                            <input type="time" id="end-time" class="form-control" step="300" value="18:00">
+                        <!-- Right column: today's schedule list -->
+                        <div class="col-md-6">
+                            <h5 class="mb-3">當日排班</h5>
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>員工</th>
+                                        <th>品牌</th>
+                                        <th>類型</th>
+                                        <th>時段</th>
+                                        <th>總時數</th>
+                                        <th>房間</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="schedule-list">
+                                    {% for schedule in schedules %}
+                                    <tr>
+                                        <td>{{ schedule.person.name }}</td>
+                                        <td>{% if schedule.brand %}{{ schedule.brand.name }}{% endif %}</td>
+                                        <td class="{% if schedule.role == '主播' %}anchor-role{% elif schedule.role == '運營' %}operator-role{% endif %}">{{ schedule.role }}</td>
+                                        <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
+                                        <td>{{ schedule.duration|floatformat:2 }}</td>
+                                        <td>{{ schedule.room }}</td>
+                                        <td>
+                                            <a href="{% url 'schedule_edit' schedule.id %}?date={{ selected_date_str }}" class="text-primary me-2">編輯</a>
+                                            <a href="{% url 'schedule_delete' schedule.id %}?date={{ selected_date_str }}" class="text-danger">刪除</a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7">無排班資料。</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
-
-                        <form id="schedule-upload-form" method="post" action="">
-                            {% csrf_token %}
-                            <input type="hidden" name="date" id="form-date">
-                            <input type="hidden" name="person" id="form-person">
-                            <input type="hidden" name="role" id="form-role">
-                            <input type="hidden" name="start_time" id="form-start-time">
-                            <input type="hidden" name="end_time" id="form-end-time">
-                            <div class="mb-3">
-                                <label for="brand-select" class="form-label">品牌</label>
-                                <select id="brand-select" name="brand" class="form-select">
-                                        <option value="">請選擇品牌</option>
-                                        {% for brand in brands %}
-                                        <option value="{{ brand.id }}" data-brand-name="{{ brand.name }}">{{ brand.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="room-input" class="form-label">房間編號</label>
-                                <input type="number" id="room-input" name="room" class="form-control" value="0" min="0" placeholder="輸入房間編號">
-                            </div>
-                            <div class="mt-3 text-end">
-                                <button type="submit" class="btn btn-primary px-4">提交排班</button>
-                            </div>
-                        </form>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <h5 class="mb-3">當日排班</h5>
-                    <table class="table table-striped">
+            </div>
+
+            <!-- 本週排班總覽（橫向顯示） -->
+            <div class="mt-4 calendar-container">
+                <div class="card p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">本週排班總覽</h5>
+                        <!-- 顯示本週已有的品牌 -->
+                        <div id="current-brands" class="brand-hours-card">載入中...</div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center" id="weekly-summary">
                         <thead>
-                            <tr>
-                                <th>員工</th>
-                                <th>品牌</th>
-                                <th>類型</th>
-                                <th>時段</th>
-                                <th>總時數</th>
-                                <th>房間</th>
-                                <th>操作</th>
-                            </tr>
+                            <tr id="weekly-summary-header"></tr>
                         </thead>
-                        <tbody id="schedule-list">
-                            {% for schedule in schedules %}
-                            <tr>
-                                <td>{{ schedule.person.name }}</td>
-                                <td>{% if schedule.brand %}{{ schedule.brand.name }}{% endif %}</td>
-                                <td class="{% if schedule.role == '主播' %}anchor-role{% elif schedule.role == '運營' %}operator-role{% endif %}">{{ schedule.role }}</td>
-                                <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
-                                <td>{{ schedule.duration|floatformat:2 }}</td>
-                                <td>{{ schedule.room }}</td>
-                                <td>
-                                    <a href="{% url 'schedule_edit' schedule.id %}?date={{ selected_date_str }}" class="text-primary me-2">編輯</a>
-                                    <a href="{% url 'schedule_delete' schedule.id %}?date={{ selected_date_str }}" class="text-danger">刪除</a>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="7">無排班資料。</td>
-                            </tr>
-                            {% endfor %}
+                        <tbody>
+                            <tr id="weekly-summary-body"></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- 本週排班總覽（橫向顯示） -->
-    <div class="mt-4 calendar-container">
-        <div class="card p-3">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0">本週排班總覽</h5>
-                <!-- 顯示本週已有的品牌 -->
-                <div id="current-brands" class="brand-hours-card">載入中...</div>
+        <!-- 通知提醒 -->
+        <div id="notification" class="notification">
+            <span id="notification-text"></span>
+        </div>
+
+        {{ schedules_by_date|json_script:"schedules-data" }}
+        <!-- 取消直播側邊欄 -->
+        <div id="cancel-sidebar" style="width:420px;max-width:90vw;position:fixed;top:0;right:0;height:100vh;z-index:9999;background:#222;box-shadow:-2px 0 16px rgba(0,0,0,0.18);transform:translateX(100%);transition:transform 0.3s cubic-bezier(.4,0,.2,1);overflow-y:auto;">
+            <div class="sidebar-header d-flex justify-content-between align-items-center">
+                <h5>取消直播</h5>
+                <button id="sidebar-close" class="btn-close btn-close-white" aria-label="Close"></button>
             </div>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-bordered text-center" id="weekly-summary">
-                <thead>
-                    <tr id="weekly-summary-header"></tr>
-                </thead>
-                <tbody>
-                    <tr id="weekly-summary-body"></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    </div>
-
-    <!-- 通知提醒 -->
-    <div id="notification" class="notification">
-        <span id="notification-text"></span>
-    </div>
-
-    {{ schedules_by_date|json_script:"schedules-data" }}
-    <!-- 取消直播側邊欄 -->
-    <div id="cancel-sidebar" style="width:420px;max-width:90vw;position:fixed;top:0;right:0;height:100vh;z-index:9999;background:#222;box-shadow:-2px 0 16px rgba(0,0,0,0.18);transform:translateX(100%);transition:transform 0.3s cubic-bezier(.4,0,.2,1);overflow-y:auto;">
-        <div class="sidebar-header d-flex justify-content-between align-items-center">
-            <h5>取消直播</h5>
-            <button id="sidebar-close" class="btn-close btn-close-white" aria-label="Close"></button>
-        </div>
-        <div class="px-3 py-2">
-            <p>取消日期: <span id="cancel-date-text"></span></p>
-            <div id="cancel-schedule-details"></div>
-            <div id="person-select-container" class="mt-2" style="display:none;">
-                <label for="cancel-person-select" class="form-label text-white">選擇員工</label>
-                <select id="cancel-person-select" class="form-select">
+            <div class="px-3 py-2">
+                <p>取消日期: <span id="cancel-date-text"></span></p>
+                <div id="cancel-schedule-details"></div>
+                <div id="person-select-container" class="mt-2" style="display:none;">
+                    <label for="cancel-person-select" class="form-label text-white">選擇員工</label>
+                    <select id="cancel-person-select" class="form-select">
                     <option value="">請選擇員工</option>
                 </select>
-            </div>
-            <hr class="text-secondary">
-            <div class="d-flex justify-content-around">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="radio" name="cancel-reason" id="reason-late" value="late">
-                    <label class="form-check-label" for="reason-late">遲到</label>
                 </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="radio" name="cancel-reason" id="reason-cancel" value="cancel" checked>
-                    <label class="form-check-label" for="reason-cancel">取消</label>
+                <hr class="text-secondary">
+                <div class="d-flex justify-content-around">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="radio" name="cancel-reason" id="reason-late" value="late">
+                        <label class="form-check-label" for="reason-late">遲到</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="radio" name="cancel-reason" id="reason-cancel" value="cancel" checked>
+                        <label class="form-check-label" for="reason-cancel">取消</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="radio" name="cancel-reason" id="reason-other" value="other">
+                        <label class="form-check-label" for="reason-other">其他</label>
+                    </div>
                 </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="radio" name="cancel-reason" id="reason-other" value="other">
-                    <label class="form-check-label" for="reason-other">其他</label>
+                <div id="other-reason-container" class="mt-3" style="display: none;">
+                    <textarea id="other-reason-input" class="form-control bg-dark text-white" rows="2" placeholder="請輸入其他原因..."></textarea>
+                </div>
+                <div id="late-hours-container" class="mt-3" style="display: none;">
+                    <label for="late-hours-input" class="form-label">遲到時數 (小時)</label>
+                    <input type="number" id="late-hours-input" class="form-control" min="0" step="0.01" placeholder="0">
+                </div>
+                <div class="mt-3 text-end">
+                    <button id="confirm-cancel-btn" class="btn btn-danger">確認</button>
                 </div>
             </div>
-            <div id="other-reason-container" class="mt-3" style="display: none;">
-                <textarea id="other-reason-input" class="form-control bg-dark text-white" rows="2" placeholder="請輸入其他原因..."></textarea>
-            </div>
-            <div id="late-hours-container" class="mt-3" style="display: none;">
-                <label for="late-hours-input" class="form-label">遲到時數 (小時)</label>
-                <input type="number" id="late-hours-input" class="form-control" min="0" step="0.01" placeholder="0">
-            </div>
-            <div class="mt-3 text-end">
-                <button id="confirm-cancel-btn" class="btn btn-danger">確認</button>
-            </div>
+            <!-- 可加入更多取消直播內容 -->
         </div>
-        <!-- 可加入更多取消直播內容 -->
-    </div>
 
-    <!-- 引入外部 JS -->
-    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script defer src="{% static 'liveapp/js/date_form.js' %}"></script>
+        <!-- 引入外部 JS -->
+        <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script defer src="{% static 'liveapp/js/date_form.js' %}"></script>
 
 
-</body>
+    </body>
 
-</html>
+    </html>
+    {% endblock %}

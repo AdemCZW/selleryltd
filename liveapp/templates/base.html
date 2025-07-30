@@ -27,31 +27,88 @@
         .nav-link:hover {
             color: var(--primary-color) !important;
         }
+        /* Loading overlay styles */
+        
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1050;
+        }
+        /* Page fade transition */
+        
+        #page-container {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
 
 <body>
-    <!-- Global navigation bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">功能選單</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="mainNavbar">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="{% url 'date_form' %}">月曆</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'brand_create' %}">新增品牌</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'invoice_create' %}">新增發票</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'person_create' %}">新增員工</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'person_list' %}">員工系統</a></li>
-                </ul>
-            </div>
+    <!-- Loading spinner overlay -->
+    <div id="loading-overlay">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
-    </nav>
-    {% block content %}{% endblock %}
+    </div>
+    <div id="page-container">
+        <!-- Global navigation bar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">功能選單</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="mainNavbar">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item"><a class="nav-link" href="{% url 'date_form' %}">月曆</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'brand_create' %}">新增品牌</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'invoice_create' %}">新增發票</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'person_create' %}">新增員工</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'person_list' %}">員工系統</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        {% block content %}{% endblock %}
+    </div>
+    <!-- /#page-container -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fade in page
+            const page = document.getElementById('page-container');
+            if (page) page.style.opacity = 1;
+            // Hide overlay
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) overlay.style.display = 'none';
+        });
+        // Link click fade out
+        document.querySelectorAll('a[href]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                const href = link.getAttribute('href');
+                if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+                e.preventDefault();
+                const page = document.getElementById('page-container');
+                if (page) page.style.opacity = 0;
+                setTimeout(() => {
+                    window.location = href;
+                }, 500);
+            });
+        });
+        // Show overlay on unload
+        window.addEventListener('beforeunload', function() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) overlay.style.display = 'flex';
+        });
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 

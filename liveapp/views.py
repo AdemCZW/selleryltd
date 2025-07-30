@@ -235,11 +235,20 @@ def schedule_delete(request, pk):
 
 def brand_create(request):
     """新增品牌功能"""
+    # Add new brand and stay on page with message
     if request.method == 'POST':
         form = BrandForm(request.POST)
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if form.is_valid():
             form.save()
-            return redirect('person_list')
+            if is_ajax:
+                return JsonResponse({'success': True, 'message': '品牌已新增'})
+            messages.success(request, '品牌已新增')
+            form = BrandForm()  # reset form
+        else:
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': form.errors.as_text()})
+            messages.error(request, f'表單驗證失敗：{form.errors}')
     else:
         form = BrandForm()
     return render(request, 'liveapp/brand_form.html', {'form': form})

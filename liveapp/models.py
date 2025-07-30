@@ -106,7 +106,7 @@ class Brand(models.Model):
         max_digits=5,
         decimal_places=2,
         default=0.00,
-        verbose_name='合作時數'
+        verbose_name='合作時數(30天/單位)'
     )
     # 合作期間開始日期
     start_date = models.DateField(

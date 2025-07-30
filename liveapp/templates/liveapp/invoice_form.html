@@ -1,111 +1,20 @@
-<!DOCTYPE html> {% load static %}
-<html lang="zh-TW">
-
-<head>
-    <meta charset="utf-8">
-    <title>新增發票</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{% static 'liveapp/css/date_form.css' %}" rel="stylesheet">
-
-    <style>
-        /* 針對 Forced Colors Mode 的調整 */
-        
-        body {
-            padding-top: 56px;
-        }
-        /* Navbar styled like date_form */
-        
-        .navbar {
-            background-color: var(--card-bg-color) !important;
-            border-bottom: 1px solid var(--border-color) !important;
-            box-shadow: var(--shadow) !important;
-        }
-        
-        .navbar-brand,
-        .nav-link {
-            color: var(--text-color) !important;
-            font-family: var(--font-main) !important;
-        }
-        
-        .nav-link:hover {
-            color: var(--primary-color) !important;
-        }
-        
-        @media (forced-colors: active) {
-            .btn,
-            .table,
-            #pdf-frame {
-                border: 2px solid CanvasText !important;
-                background-color: Canvas !important;
-                color: CanvasText !important;
-            }
-            #pdf-preview {
-                border: 2px solid CanvasText !important;
-            }
-            .item-form input {
-                background-color: Field !important;
-                color: FieldText !important;
-                border: 2px solid CanvasText !important;
-            }
-        }
-        /* Compatibility enhancements */
-        
-        html {
-            -webkit-text-size-adjust: 100%;
-            /* Chrome, Safari */
-            text-size-adjust: 100%;
-            /* standard */
-            print-color-adjust: exact;
-            /* replaces deprecated color-adjust */
-        }
-        /* Remove input borders in PDF export/print */
-        
-        @media print {
-            input.form-control,
-            textarea.form-control,
-            select.form-control {
-                border: none !important;
-                box-shadow: none !important;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">功能選單</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="mainNavbar">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="{% url 'date_form' %}">月曆</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'brand_create' %}">新增品牌</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'invoice_create' %}">新增發票</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'person_create' %}">新增員工</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'person_list' %}">員工系統</a></li>
-                </ul>
-            </div>
+{% extends 'base.html' %} {% block title %}新增發票{% endblock %} {% block content %} {% csrf_token %}
+<div class="container mt-4">
+    <div id="invoice-content">
+        <h1 class="mb-4">Invoice_Payment for </h1>
+        <div class="mb-3" id="bill-to-section">
+            <strong>Bill to:</strong> <span id="bill-to-info">Please select a company</span>
         </div>
-    </nav>
-    {% csrf_token %}
-    <div class="container mt-4">
-        <div id="invoice-content">
-            <h1 class="mb-4">Invoice_Payment for </h1>
-            <div class="mb-3" id="bill-to-section">
-                <strong>Bill to:</strong> <span id="bill-to-info">Please select a company</span>
-            </div>
-            <div class="mb-3">
-                <strong>Invoice Number:</strong> <span id="invoice-number">Loading...</span>
-            </div>
-            <form id="invoice-form" method="post">
-                {{ formset.management_form }}
-                <!-- Header fields arranged in grid -->
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        {{ form.person.label_tag }}
-                        <select id="id_person" name="person" class="form-control" required>
+        <div class="mb-3">
+            <strong>Invoice Number:</strong> <span id="invoice-number">Loading...</span>
+        </div>
+        <form id="invoice-form" method="post">
+            {{ formset.management_form }}
+            <!-- Header fields arranged in grid -->
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    {{ form.person.label_tag }}
+                    <select id="id_person" name="person" class="form-control" required>
                             {% for p in persons %}
                                 <option value="{{ p.id }}" 
                                     data-bank="{{ p.bank }}" 
@@ -117,82 +26,82 @@
                                 </option>
                             {% endfor %}
                         </select>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        {{ form.company.label_tag }}
-                        <select id="id_company" name="company" class="form-control">
+                </div>
+                <div class="col-md-4 mb-3">
+                    {{ form.company.label_tag }}
+                    <select id="id_company" name="company" class="form-control">
                             
                             {% for c in companies %}
                                 <option value="{{ c.id }}" data-address="{{ c.address }}">{{ c.name }}</option>
                             {% endfor %}
                         </select>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        {{ form.date.label_tag }} {{ form.date }}
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        {{ form.receipt_number.label_tag }} {{ form.receipt_number }}
-                    </div>
                 </div>
-                <!-- Bank details auto-filled -->
-                <div class="row">
-                    <div class="col-12 mb-3">
-                        <strong>Bank Detail:</strong>
-                    </div>
+                <div class="col-md-4 mb-3">
+                    {{ form.date.label_tag }} {{ form.date }}
                 </div>
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <label for="bank">Bank</label>
-                        <input type="text" id="bank" class="form-control" value="{{ bank }}" readonly>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label for="bank_name">Bank Name</label>
-                        <input type="text" id="bank_name" class="form-control" value="{{ bank_name }}" readonly>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label for="account">Account Number</label>
-                        <input type="text" id="account" class="form-control" value="{{ account }}" readonly>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label for="sort_code">Sort Code</label>
-                        <input type="text" id="sort_code" class="form-control" value="{{ sort_code }}" readonly>
-                    </div>
+                <div class="col-md-4 mb-3">
+                    {{ form.receipt_number.label_tag }} {{ form.receipt_number }}
                 </div>
-                <!-- Item formset -->
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Description</th>
-                            <th>Hours</th>
-                            <th>Rate</th>
-                            <th>Subtotal</th>
-                            <th>Delete</th>
-                        </tr>
-                    </thead>
-                    <tbody id="formset-container">
-                        {% for item_form in formset.forms %}
-                        <tr class="item-form">
-                            <td>{{ item_form.description }}</td>
-                            <td>{{ item_form.hours }}</td>
-                            <td>{{ item_form.rate }}</td>
-                            <td>{{ item_form.total_amount }}</td>
-                            <td>
-                                {{ item_form.DELETE.as_hidden }}
-                                <button type="button" class="btn btn-danger btn-sm delete-item">Delete</button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <!-- Grand total display -->
-                <div class="row mb-3">
-                    <div class="col text-end">
-                        <strong>Total Amount:</strong>
-                        <input type="text" id="grand-total" class="form-control d-inline-block w-auto" value="0.00" readonly>
-                    </div>
+            </div>
+            <!-- Bank details auto-filled -->
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <strong>Bank Detail:</strong>
                 </div>
-                <!-- Empty form template for dynamic row addition -->
-                <template id="empty-item-template">
+            </div>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="bank">Bank</label>
+                    <input type="text" id="bank" class="form-control" value="{{ bank }}" readonly>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="bank_name">Bank Name</label>
+                    <input type="text" id="bank_name" class="form-control" value="{{ bank_name }}" readonly>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="account">Account Number</label>
+                    <input type="text" id="account" class="form-control" value="{{ account }}" readonly>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="sort_code">Sort Code</label>
+                    <input type="text" id="sort_code" class="form-control" value="{{ sort_code }}" readonly>
+                </div>
+            </div>
+            <!-- Item formset -->
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Hours</th>
+                        <th>Rate</th>
+                        <th>Subtotal</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody id="formset-container">
+                    {% for item_form in formset.forms %}
+                    <tr class="item-form">
+                        <td>{{ item_form.description }}</td>
+                        <td>{{ item_form.hours }}</td>
+                        <td>{{ item_form.rate }}</td>
+                        <td>{{ item_form.total_amount }}</td>
+                        <td>
+                            {{ item_form.DELETE.as_hidden }}
+                            <button type="button" class="btn btn-danger btn-sm delete-item">Delete</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <!-- Grand total display -->
+            <div class="row mb-3">
+                <div class="col text-end">
+                    <strong>Total Amount:</strong>
+                    <input type="text" id="grand-total" class="form-control d-inline-block w-auto" value="0.00" readonly>
+                </div>
+            </div>
+            <!-- Empty form template for dynamic row addition -->
+            <template id="empty-item-template">
     <tr class="item-form">
         <td>{{ formset.empty_form.description }}</td>
         <td>{{ formset.empty_form.hours }}</td>
@@ -204,230 +113,268 @@
         </td>
     </tr>
 </template>
-                <button type="button" id="add-item" class="btn btn-secondary mb-3">Add Item</button>
-                <button type="submit" name="save" class="btn btn-primary mb-3">Save Invoice</button>
-                <button type="button" id="preview-pdf-btn" class="btn btn-info mb-3">Preview PDF</button>
-                <button type="button" id="download-pdf-btn" class="btn btn-success mb-3">Download PDF</button>
-            </form>
-        </div>
-        <div id="pdf-preview" style="display:none;" class="mt-3">
-            <canvas id="pdf-canvas"></canvas>
-        </div>
+            <button type="button" id="add-item" class="btn btn-secondary mb-3">Add Item</button>
+            <button type="button" id="add-manual-item" class="btn btn-secondary mb-3 ms-2">新增手動小計</button>
+            <button type="submit" name="save" class="btn btn-primary mb-3">Save Invoice</button>
+            <button type="button" id="preview-pdf-btn" class="btn btn-info mb-3">Preview PDF</button>
+            <button type="button" id="download-pdf-btn" class="btn btn-success mb-3">Download PDF</button>
+        </form>
     </div>
-    <!-- Data attributes on select options provide person bank info -->
-    <!-- Include PDF dependencies -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Generate Invoice Number based on UK date and time
-            function generateInvoiceNumber() {
-                const now = new Date();
-                const ukTime = new Date(now.toLocaleString("en-US", {
-                    timeZone: "Europe/London"
-                }));
+    <div id="pdf-preview" style="display:none;" class="mt-3">
+        <canvas id="pdf-canvas"></canvas>
+    </div>
+</div>
+<!-- Data attributes on select options provide person bank info -->
+<!-- Include PDF dependencies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Allow manual input of Subtotal
+        document.querySelectorAll('input[name$="-total_amount"]').forEach(input => input.removeAttribute('readonly'));
+        // Generate Invoice Number based on UK date and time
+        function generateInvoiceNumber() {
+            const now = new Date();
+            const ukTime = new Date(now.toLocaleString("en-US", {
+                timeZone: "Europe/London"
+            }));
 
-                const year = ukTime.getFullYear();
-                const month = String(ukTime.getMonth() + 1).padStart(2, '0');
-                const day = String(ukTime.getDate()).padStart(2, '0');
-                const hours = String(ukTime.getHours()).padStart(2, '0');
-                const minutes = String(ukTime.getMinutes()).padStart(2, '0');
-                const seconds = String(ukTime.getSeconds()).padStart(2, '0');
+            const year = ukTime.getFullYear();
+            const month = String(ukTime.getMonth() + 1).padStart(2, '0');
+            const day = String(ukTime.getDate()).padStart(2, '0');
+            const hours = String(ukTime.getHours()).padStart(2, '0');
+            const minutes = String(ukTime.getMinutes()).padStart(2, '0');
+            const seconds = String(ukTime.getSeconds()).padStart(2, '0');
 
-                return `${year}${month}${day}${hours}${minutes}${seconds}`;
+            return `${year}${month}${day}${hours}${minutes}${seconds}`;
+        }
+
+        // Set the invoice number
+        document.getElementById('invoice-number').textContent = generateInvoiceNumber();
+
+        // PDF export/preview shared settings
+        function getPdfOptions() {
+            const headingEl = document.querySelector('#invoice-content h1');
+            const receiptNumberEl = document.querySelector('input[name="receipt_number"]');
+
+            let title = headingEl ? headingEl.textContent.trim() : 'Invoice_Payment';
+
+            // Add receipt_number (Payment for data) to filename if it exists
+            if (receiptNumberEl && receiptNumberEl.value.trim()) {
+                title += '_' + receiptNumberEl.value.trim();
             }
 
-            // Set the invoice number
-            document.getElementById('invoice-number').textContent = generateInvoiceNumber();
+            // Replace spaces and special characters for filename
+            const filename = title.replace(/\s+/g, '_').replace(/[^\w\-_.]/g, '') + '.pdf';
 
-            // PDF export/preview shared settings
-            function getPdfOptions() {
-                const headingEl = document.querySelector('#invoice-content h1');
-                const receiptNumberEl = document.querySelector('input[name="receipt_number"]');
-
-                let title = headingEl ? headingEl.textContent.trim() : 'Invoice_Payment';
-
-                // Add receipt_number (Payment for data) to filename if it exists
-                if (receiptNumberEl && receiptNumberEl.value.trim()) {
-                    title += '_' + receiptNumberEl.value.trim();
-                }
-
-                // Replace spaces and special characters for filename
-                const filename = title.replace(/\s+/g, '_').replace(/[^\w\-_.]/g, '') + '.pdf';
-
-                return {
-                    margin: [10, 10, 10, 10],
-                    filename: filename,
-                    html2canvas: {
-                        scale: 2,
-                        useCORS: true,
-                        // Hide action buttons in cloned document for PDF
-                        onclone: (clonedDoc) => {
-                            // Hide main action buttons
-                            ['add-item', 'preview-pdf-btn', 'download-pdf-btn'].forEach(id => {
-                                const el = clonedDoc.getElementById(id);
-                                if (el) el.style.display = 'none';
-                            });
-                            // Hide save button by name attribute
-                            clonedDoc.querySelectorAll('button[name="save"]').forEach(btn => btn.style.display = 'none');
-                            // Hide all delete buttons
-                            clonedDoc.querySelectorAll('.delete-item').forEach(btn => btn.style.display = 'none');
-                            // Hide all buttons in general (including 新增項目, 刪除 buttons)
-                            clonedDoc.querySelectorAll('button').forEach(btn => btn.style.display = 'none');
-                            // Strip all non-text elements, leaving only plain text
-                            const container = clonedDoc.getElementById('invoice-content');
-                            const text = container.innerText;
-                            container.innerHTML = '';
-                            text.split(/\n+/).forEach(line => {
-                                if (line.trim()) {
-                                    const p = clonedDoc.createElement('p');
-                                    p.textContent = line.trim();
-                                    container.appendChild(p);
-                                }
-                            });
-                        }
-                    },
-                    jsPDF: {
-                        unit: 'mm',
-                        format: 'a4',
-                        orientation: 'portrait'
+            return {
+                margin: [10, 10, 10, 10],
+                filename: filename,
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    // Hide action buttons in cloned document for PDF
+                    onclone: (clonedDoc) => {
+                        // Hide main action buttons
+                        ['add-item', 'preview-pdf-btn', 'download-pdf-btn'].forEach(id => {
+                            const el = clonedDoc.getElementById(id);
+                            if (el) el.style.display = 'none';
+                        });
+                        // Hide save button by name attribute
+                        clonedDoc.querySelectorAll('button[name="save"]').forEach(btn => btn.style.display = 'none');
+                        // Hide all delete buttons
+                        clonedDoc.querySelectorAll('.delete-item').forEach(btn => btn.style.display = 'none');
+                        // Hide all buttons in general (including 新增項目, 刪除 buttons)
+                        clonedDoc.querySelectorAll('button').forEach(btn => btn.style.display = 'none');
+                        // Strip all non-text elements, leaving only plain text
+                        const container = clonedDoc.getElementById('invoice-content');
+                        const text = container.innerText;
+                        container.innerHTML = '';
+                        text.split(/\n+/).forEach(line => {
+                            if (line.trim()) {
+                                const p = clonedDoc.createElement('p');
+                                p.textContent = line.trim();
+                                container.appendChild(p);
+                            }
+                        });
                     }
-                };
-            }
-            // Grab person select and heading elements
-            const personSelect = document.getElementById('id_person');
-            const companySelect = document.getElementById('id_company');
-            const addressField = document.getElementById('id_address');
-            const billToInfo = document.getElementById('bill-to-info');
-            const heading = document.querySelector('#invoice-content h1');
-
-            // Function to fill bank details based on selected option's data attributes
-            function fillBankDetails() {
-                const selectedOption = personSelect.options[personSelect.selectedIndex];
-                document.getElementById('bank').value = selectedOption.dataset.bank || '';
-                document.getElementById('bank_name').value = selectedOption.dataset.bankName || '';
-                document.getElementById('account').value = selectedOption.dataset.account || '';
-                document.getElementById('sort_code').value = selectedOption.dataset.sortCode || '';
-            }
-
-            // Function to fill address and update Bill To based on selected company
-            function fillCompanyAddress() {
-                const selectedOption = companySelect.options[companySelect.selectedIndex];
-                const companyName = selectedOption ? selectedOption.textContent : '';
-                const companyAddress = selectedOption ? selectedOption.dataset.address || '' : '';
-                // Update hidden address field if present
-                if (addressField) {
-                    addressField.value = companyAddress;
+                },
+                jsPDF: {
+                    unit: 'mm',
+                    format: 'a4',
+                    orientation: 'portrait'
                 }
-                // Update Bill To display
-                if (billToInfo) {
-                    if (companySelect.value) {
-                        billToInfo.textContent = `${companyName}, Address: ${companyAddress}`;
-                    } else {
-                        billToInfo.textContent = 'Please select a company';
-                    }
+            };
+        }
+        // Grab person select and heading elements
+        const personSelect = document.getElementById('id_person');
+        const companySelect = document.getElementById('id_company');
+        const addressField = document.getElementById('id_address');
+        const billToInfo = document.getElementById('bill-to-info');
+        const heading = document.querySelector('#invoice-content h1');
+
+        // Function to fill bank details based on selected option's data attributes
+        function fillBankDetails() {
+            const selectedOption = personSelect.options[personSelect.selectedIndex];
+            document.getElementById('bank').value = selectedOption.dataset.bank || '';
+            document.getElementById('bank_name').value = selectedOption.dataset.bankName || '';
+            document.getElementById('account').value = selectedOption.dataset.account || '';
+            document.getElementById('sort_code').value = selectedOption.dataset.sortCode || '';
+        }
+
+        // Function to fill address and update Bill To based on selected company
+        function fillCompanyAddress() {
+            const selectedOption = companySelect.options[companySelect.selectedIndex];
+            const companyName = selectedOption ? selectedOption.textContent : '';
+            const companyAddress = selectedOption ? selectedOption.dataset.address || '' : '';
+            // Update hidden address field if present
+            if (addressField) {
+                addressField.value = companyAddress;
+            }
+            // Update Bill To display
+            if (billToInfo) {
+                if (companySelect.value) {
+                    billToInfo.textContent = `${companyName}, Address: ${companyAddress}`;
+                } else {
+                    billToInfo.textContent = 'Please select a company';
                 }
             }
+        }
 
-            // Function to update heading and bank details when selection changes
-            function updateHeading() {
-                const name = personSelect.options[personSelect.selectedIndex].text;
-                heading.textContent = 'Invoice_Payment for ' + name;
-                fillBankDetails();
-            }
+        // Function to update heading and bank details when selection changes
+        function updateHeading() {
+            const name = personSelect.options[personSelect.selectedIndex].text;
+            heading.textContent = 'Invoice_Payment for ' + name;
+            fillBankDetails();
+        }
 
-            if (personSelect) {
-                personSelect.addEventListener('change', updateHeading);
-                updateHeading(); // initial update if default selected
-            }
+        if (personSelect) {
+            personSelect.addEventListener('change', updateHeading);
+            updateHeading(); // initial update if default selected
+        }
 
-            if (companySelect) {
-                companySelect.addEventListener('change', fillCompanyAddress);
-                // Initialize Bill-to info on page load
-                fillCompanyAddress();
-            }
-            // Handle adding item rows
-            const container = document.getElementById('formset-container');
-            const addBtn = document.getElementById('add-item');
-            const totalForms = document.querySelector('input[name="{{ formset.prefix }}-TOTAL_FORMS"]');
-            addBtn.addEventListener('click', () => {
+        if (companySelect) {
+            companySelect.addEventListener('change', fillCompanyAddress);
+            // Initialize Bill-to info on page load
+            fillCompanyAddress();
+        }
+        // Handle adding item rows
+        const container = document.getElementById('formset-container');
+        const addBtn = document.getElementById('add-item');
+        const totalForms = document.querySelector('input[name="{{ formset.prefix }}-TOTAL_FORMS"]');
+        addBtn.addEventListener('click', () => {
+            const idx = Number(totalForms.value);
+            const tpl = document.getElementById('empty-item-template');
+            const row = tpl.content.firstElementChild.cloneNode(true);
+            row.querySelectorAll('input').forEach(inp => {
+                inp.name = inp.name.replace('__prefix__', idx);
+                inp.value = '';
+            });
+            container.appendChild(row);
+            totalForms.value = idx + 1;
+            attachListeners(row);
+            // Add manual-subtotal-only row
+            const manualBtn = document.getElementById('add-manual-item');
+            manualBtn && manualBtn.addEventListener('click', () => {
                 const idx = Number(totalForms.value);
                 const tpl = document.getElementById('empty-item-template');
                 const row = tpl.content.firstElementChild.cloneNode(true);
+                // Update names and clear values, set manual subtotal
                 row.querySelectorAll('input').forEach(inp => {
                     inp.name = inp.name.replace('__prefix__', idx);
-                    inp.value = '';
+                    if (inp.name.endsWith('-total_amount')) {
+                        inp.removeAttribute('readonly');
+                        inp.value = '';
+                    } else {
+                        inp.value = inp.name.endsWith('-hours') || inp.name.endsWith('-rate') ? '' : inp.value;
+                    }
                 });
                 container.appendChild(row);
+                // Mark manual row with background color
+                row.style.backgroundColor = '#fff8dc';
+                const hourInput = row.querySelector('input[name$="-hours"]');
+                const rateInput = row.querySelector('input[name$="-rate"]');
+                const subInput = row.querySelector('input[name$="-total_amount"]');
+                [hourInput, rateInput, subInput].forEach(i => {
+                    if (i) i.style.backgroundColor = '#fff8dc';
+                });
                 totalForms.value = idx + 1;
                 attachListeners(row);
             });
-            // Auto compute totals
-            function attachListeners(elem) {
-                const hours = elem.querySelector('input[name$="-hours"]');
-                const rate = elem.querySelector('input[name$="-rate"]');
-                const total = elem.querySelector('input[name$="-total_amount"]');
-                const update = () => {
-                    total.value = ((+hours.value || 0) * (+rate.value || 0)).toFixed(2);
-                    updateGrandTotal();
-                };
-                hours.addEventListener('input', update);
-                rate.addEventListener('input', update);
-                // Bind delete button for each row
-                const deleteBtn = elem.querySelector('.delete-item');
-                if (deleteBtn) {
-                    deleteBtn.addEventListener('click', function() {
-                        const delInput = elem.querySelector('input[type="hidden"][name$="-DELETE"]');
-                        if (delInput) {
-                            delInput.value = 'on';
-                        }
-                        elem.style.display = 'none';
-                        updateGrandTotal();
-                    });
-                }
-                update();
-            }
-            document.querySelectorAll('.item-form').forEach(form => attachListeners(form));
-            // Compute and display grand total
-            function updateGrandTotal() {
-                let sum = 0;
-                // Sum only non-deleted item totals
-                document.querySelectorAll('tr.item-form').forEach(row => {
-                    const delInput = row.querySelector('input[type="hidden"][name$="-DELETE"]');
-                    if (delInput && delInput.value === 'on') {
-                        // skip deleted rows
-                        return;
-                    }
-                    const totalInput = row.querySelector('input[name$="-total_amount"]');
-                    if (totalInput) {
-                        sum += parseFloat(totalInput.value) || 0;
-                    }
-                });
-                document.getElementById('grand-total').value = sum.toFixed(2);
-            }
-            updateGrandTotal();
-            // Event delegation for delete buttons
-            container.addEventListener('click', function(e) {
-                if (e.target && e.target.classList.contains('delete-item')) {
-                    const row = e.target.closest('.item-form');
-                    const delInput = row.querySelector('input[type="hidden"][name$="-DELETE"]');
-                    if (delInput) delInput.value = 'on';
-                    row.style.display = 'none';
-                    updateGrandTotal();
-                }
-            });
-            // Preview PDF by opening full document in a new tab
-            document.getElementById('preview-pdf-btn').addEventListener('click', async e => {
-                e.preventDefault();
-                const blob = await html2pdf().set(getPdfOptions()).from(document.getElementById('invoice-content')).outputPdf('blob');
-                const url = URL.createObjectURL(blob);
-                window.open(url, '_blank');
-            });
-            // Download PDF with same settings
-            document.getElementById('download-pdf-btn').addEventListener('click', () => {
-                html2pdf().set(getPdfOptions()).from(document.getElementById('invoice-content')).save();
-            });
         });
-    </script>
-</body>
-
-</html>
+        // Auto compute totals
+        function attachListeners(elem) {
+            const hours = elem.querySelector('input[name$="-hours"]');
+            const rate = elem.querySelector('input[name$="-rate"]');
+            const total = elem.querySelector('input[name$="-total_amount"]');
+            let manualOverride = false;
+            // Recalculate subtotal unless manually overridden
+            const update = () => {
+                if (!manualOverride) {
+                    total.value = ((+hours.value || 0) * (+rate.value || 0)).toFixed(2);
+                }
+                updateGrandTotal();
+            };
+            hours.addEventListener('input', update);
+            rate.addEventListener('input', update);
+            // Detect manual edits to Subtotal to prevent auto-override
+            total.addEventListener('input', () => {
+                manualOverride = true;
+                updateGrandTotal();
+            });
+            // Bind delete button for each row
+            const deleteBtn = elem.querySelector('.delete-item');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function() {
+                    const delInput = elem.querySelector('input[type="hidden"][name$="-DELETE"]');
+                    if (delInput) {
+                        delInput.value = 'on';
+                    }
+                    elem.style.display = 'none';
+                    updateGrandTotal();
+                });
+            }
+            update();
+        }
+        document.querySelectorAll('.item-form').forEach(form => attachListeners(form));
+        // Compute and display grand total
+        function updateGrandTotal() {
+            let sum = 0;
+            // Sum only non-deleted item totals
+            document.querySelectorAll('tr.item-form').forEach(row => {
+                const delInput = row.querySelector('input[type="hidden"][name$="-DELETE"]');
+                if (delInput && delInput.value === 'on') {
+                    // skip deleted rows
+                    return;
+                }
+                const totalInput = row.querySelector('input[name$="-total_amount"]');
+                if (totalInput) {
+                    sum += parseFloat(totalInput.value) || 0;
+                }
+            });
+            document.getElementById('grand-total').value = sum.toFixed(2);
+        }
+        updateGrandTotal();
+        // Event delegation for delete buttons
+        container.addEventListener('click', function(e) {
+            if (e.target && e.target.classList.contains('delete-item')) {
+                const row = e.target.closest('.item-form');
+                const delInput = row.querySelector('input[type="hidden"][name$="-DELETE"]');
+                if (delInput) delInput.value = 'on';
+                row.style.display = 'none';
+                updateGrandTotal();
+            }
+        });
+        // Preview PDF by opening full document in a new tab
+        document.getElementById('preview-pdf-btn').addEventListener('click', async e => {
+            e.preventDefault();
+            const blob = await html2pdf().set(getPdfOptions()).from(document.getElementById('invoice-content')).outputPdf('blob');
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+        });
+        // Download PDF with same settings
+        document.getElementById('download-pdf-btn').addEventListener('click', () => {
+            html2pdf().set(getPdfOptions()).from(document.getElementById('invoice-content')).save();
+        });
+    });
+</script>
+{% endblock %}

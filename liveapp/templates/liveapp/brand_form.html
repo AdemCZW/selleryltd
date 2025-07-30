@@ -9,53 +9,185 @@
         body {
             padding-top: 56px;
         }
+        /* Loading overlay styles */
+        
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1050;
+        }
+        /* Page fade transition */
+        
+        #page-container {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">功能選單</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="mainNavbar">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="{% url 'date_form' %}">月曆</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'brand_create' %}">新增品牌</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'invoice_create' %}">新增發票</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'person_create' %}">新增員工</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'person_list' %}">員工系統</a></li>
-                </ul>
+    <div id="page-container">
+        <!-- Loading spinner overlay -->
+        <div id="loading-overlay">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
             </div>
         </div>
-    </nav>
-    <div class="container mt-5">
-        <h1 class="mb-4">新增品牌</h1>
-        <form method="post">
-            {% csrf_token %}
-            <div class="mb-3">
-                {{ form.name.label_tag }} {{ form.name }}
+        <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">功能選單</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="mainNavbar">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item"><a class="nav-link" href="{% url 'date_form' %}">月曆</a></li>
+                        <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'brand_create' %}">新增品牌</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'invoice_create' %}">新增發票</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'person_create' %}">新增員工</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'person_list' %}">員工系統</a></li>
+                    </ul>
+                </div>
             </div>
-            <div class="mb-3">
-                {{ form.color.label_tag }} {{ form.color }}
+        </nav>
+        <div class="container mt-5">
+            {% if messages %} {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-            <div class="mb-3">
-                {{ form.responsible.label_tag }} {{ form.responsible }}
-            </div>
-            <div class="mb-3">
-                {{ form.coop_hours.label_tag }} {{ form.coop_hours }}
-            </div>
-            <div class="mb-3">
-                {{ form.start_date.label_tag }} {{ form.start_date }}
-            </div>
-            <div class="mb-3">
-                {{ form.end_date.label_tag }} {{ form.end_date }}
-            </div>
-            <button type="submit" class="btn btn-primary">儲存</button>
-            <a href="{% url 'person_list' %}" class="btn btn-secondary">取消</a>
-        </form>
+            {% endfor %} {% endif %}
+            <h1 class="mb-4">新增品牌</h1>
+            <form method="post" action="{% url 'brand_create' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    {{ form.name.label_tag }} {{ form.name }}
+                </div>
+                <div class="mb-3">
+                    {{ form.color.label_tag }} {{ form.color }}
+                </div>
+                <div class="mb-3">
+                    {{ form.responsible.label_tag }} {{ form.responsible }}
+                </div>
+                <div class="mb-3">
+                    {{ form.coop_hours.label_tag }} {{ form.coop_hours }}
+                </div>
+                <div class="mb-3">
+                    {{ form.start_date.label_tag }} {{ form.start_date }}
+                </div>
+                <div class="mb-3">
+                    {{ form.end_date.label_tag }} {{ form.end_date }}
+                </div>
+                <button type="submit" class="btn btn-primary">儲存</button>
+                <a href="{% url 'person_list' %}" class="btn btn-secondary">取消</a>
+            </form>
+        </div>
     </div>
+    <!-- /#page-container -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fade in page
+            const page = document.getElementById('page-container');
+            if (page) {
+                page.style.opacity = 1;
+            }
+            // Hide overlay on load
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) overlay.style.display = 'none';
+            const form = document.querySelector('form');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitBtn.disabled = true;
+                submitBtn.textContent = '新增中...';
+                // 顯示 loading overlay 並記錄開始時間
+                overlay.style.display = 'flex';
+                const startTime = Date.now();
+                const fd = new FormData(form);
+                fetch(form.action || '', {
+                        method: 'POST',
+                        body: fd,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        const container = form.parentNode;
+                        // remove existing alerts
+                        container.querySelectorAll('.alert').forEach(a => a.remove());
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = `alert alert-${data.success ? 'success' : 'danger'} alert-dismissible fade show`;
+                        alertDiv.role = 'alert';
+                        alertDiv.innerHTML = data.success ? data.message : data.error;
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'btn-close';
+                        btn.setAttribute('data-bs-dismiss', 'alert');
+                        alertDiv.appendChild(btn);
+                        container.insertBefore(alertDiv, form);
+                        // auto-dismiss alert after 3 seconds
+                        setTimeout(() => {
+                            alertDiv.remove();
+                        }, 3000);
+                        if (data.success) form.reset();
+                    })
+                    .catch(() => {
+                        const container = form.parentNode;
+                        container.querySelectorAll('.alert').forEach(a => a.remove());
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                        alertDiv.role = 'alert';
+                        alertDiv.textContent = '網路錯誤，請稍後再試';
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'btn-close';
+                        btn.setAttribute('data-bs-dismiss', 'alert');
+                        alertDiv.appendChild(btn);
+                        container.insertBefore(alertDiv, form);
+                        // auto-dismiss alert after 3 seconds
+                        setTimeout(() => {
+                            alertDiv.remove();
+                        }, 3000);
+                    })
+                    .finally(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = '儲存';
+                        // 確保overlay至少顯示1秒再隱藏
+                        const elapsed = Date.now() - startTime;
+                        setTimeout(() => {
+                            overlay.style.display = 'none';
+                        }, Math.max(0, 1000 - elapsed));
+                    });
+            });
+        });
+        // Link click fade out
+        document.querySelectorAll('a[href]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                const href = link.href;
+                if (!href.startsWith(window.location.origin)) return;
+                e.preventDefault();
+                const page = document.getElementById('page-container');
+                if (page) page.style.opacity = 0;
+                setTimeout(() => {
+                    window.location = href;
+                }, 500);
+            });
+        });
+        // Show overlay on page unload/navigation
+        window.addEventListener('beforeunload', function() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) overlay.style.display = 'flex';
+        });
+    </script>
 </body>
 
 </html>
