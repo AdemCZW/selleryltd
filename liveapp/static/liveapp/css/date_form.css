@@ -28,6 +28,7 @@ body {
     color: var(--text-color) !important;
     min-height: 100vh;
     line-height: 1.6;
+    padding-top: 120px;
 }
 
 .calendar-container {
@@ -94,6 +95,249 @@ body {
     color: white !important;
     border-color: var(--primary-color) !important;
     transform: translateY(-2px);
+}
+
+
+/* Fixed Navigation Arrows */
+
+.fixed-nav-arrows {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 9997;
+}
+
+.fixed-nav-btn {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--card-bg-color), #f8f9fa);
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.15);
+    cursor: pointer;
+    pointer-events: auto;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 9998;
+}
+
+.fixed-nav-btn:hover {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover-color));
+    box-shadow: 0 12px 35px rgba(0, 123, 255, 0.3);
+    transform: translateY(-50%) scale(1.1);
+    border-color: var(--primary-hover-color);
+}
+
+.fixed-nav-btn:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.fixed-nav-left {
+    left: 20px;
+}
+
+.fixed-nav-right {
+    right: 20px;
+}
+
+.nav-arrow {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-color);
+    transition: all 0.3s ease;
+    line-height: 1;
+    user-select: none;
+}
+
+.fixed-nav-btn:hover .nav-arrow {
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+
+/* Add ripple effect */
+
+.fixed-nav-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(0, 123, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.fixed-nav-btn:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+
+/* Subtle breathing animation for navigation arrows */
+
+@keyframes breathe {
+    0%,
+    100% {
+        box-shadow: 0 8px 25px rgba(0, 123, 255, 0.15);
+    }
+    50% {
+        box-shadow: 0 8px 25px rgba(0, 123, 255, 0.25);
+    }
+}
+
+.fixed-nav-btn {
+    animation: breathe 3s ease-in-out infinite;
+}
+
+.fixed-nav-btn:hover {
+    animation: none;
+}
+
+
+/* Focus styles for accessibility */
+
+.fixed-nav-btn:focus {
+    outline: 3px solid rgba(0, 123, 255, 0.5);
+    outline-offset: 2px;
+}
+
+
+/* Add subtle glow effect */
+
+.fixed-nav-btn::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, var(--primary-color), transparent, var(--primary-color));
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.fixed-nav-btn:hover::after {
+    opacity: 0.3;
+}
+
+
+/* Fixed Week Range Display */
+
+.fixed-week-display {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    transform: none;
+    z-index: 9999;
+    pointer-events: auto;
+}
+
+.week-range-container {
+    background: linear-gradient(135deg, var(--card-bg-color), rgba(248, 249, 250, 0.95));
+    border: 2px solid var(--primary-color);
+    border-radius: 20px;
+    padding: 12px 24px;
+    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.15);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.week-range-container:hover {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover-color));
+    box-shadow: 0 12px 35px rgba(0, 123, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.week-range-container:hover #week-range {
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#week-range {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-align: center;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    user-select: none;
+}
+
+
+/* Add subtle glow animation */
+
+@keyframes weekGlow {
+    0%,
+    100% {
+        box-shadow: 0 8px 25px rgba(0, 123, 255, 0.15);
+    }
+    50% {
+        box-shadow: 0 8px 25px rgba(0, 123, 255, 0.25);
+    }
+}
+
+.week-range-container {
+    animation: weekGlow 4s ease-in-out infinite;
+}
+
+.week-range-container:hover {
+    animation: none;
+}
+
+
+/* Add decorative elements */
+
+.week-range-container::before {
+    content: '📅';
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+.week-range-container:hover::before {
+    opacity: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.week-range-container::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 22px;
+    background: linear-gradient(45deg, var(--primary-color), transparent, var(--primary-color));
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.week-range-container:hover::after {
+    opacity: 0.3;
 }
 
 
@@ -171,26 +415,190 @@ body {
 /* Brand Hours */
 
 .brand-hours-card {
-    display: flex;
-    align-items: center;
-    gap: 12px;
     background: var(--card-bg-color);
-    border-radius: 12px;
+    border-radius: 8px;
     box-shadow: var(--shadow);
-    padding: 16px 24px;
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--text-color);
+    padding: 12px 16px;
     border: 1px solid var(--border-color);
-    margin: 0 0 24px 0;
+    margin: 0;
+    min-width: 200px;
 }
 
-.brand-hours-card:before {
+.brand-hours-card .brand-hours-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted-text-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+.brand-hours-card .brand-hours-header:before {
     content: '\f201';
     font-family: 'Font Awesome 5 Free';
     font-weight: 900;
     color: var(--primary-color);
-    font-size: 1.8rem;
+    font-size: 1rem;
+}
+
+.brand-hours-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.brand-hours-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.brand-hours-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.brand-hours-item .brand-icon {
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+.brand-hours-item .brand-name {
+    font-weight: 600;
+}
+
+.brand-hours-item .brand-hours-value {
+    font-weight: 700;
+    opacity: 0.9;
+}
+
+.brand-hours-item.no-brands {
+    color: var(--muted-text-color);
+    font-style: italic;
+}
+
+
+/* Room Utilization */
+
+.room-utilization-card {
+    background: var(--card-bg-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    margin: 0;
+    min-width: 220px;
+}
+
+.room-utilization-card .room-utilization-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted-text-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+.room-utilization-card .room-utilization-header:before {
+    content: '📊';
+    font-size: 1rem;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.room-utilization-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.room-utilization-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.room-utilization-item:hover {
+    transform: translateX(2px);
+}
+
+.room-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 80px;
+}
+
+.room-number {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 0.8rem;
+}
+
+.room-progress-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 8px;
+}
+
+.room-progress-bar {
+    flex: 1;
+    height: 6px;
+    background-color: var(--border-color);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+
+.room-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success-color), var(--primary-color));
+    border-radius: 3px;
+    transition: width 0.8s ease;
+    position: relative;
+}
+
+.room-progress-fill.high-usage {
+    background: linear-gradient(90deg, var(--warning-color), var(--danger-color));
+}
+
+.room-progress-fill.medium-usage {
+    background: linear-gradient(90deg, var(--primary-color), var(--warning-color));
+}
+
+.room-progress-fill.low-usage {
+    background: linear-gradient(90deg, var(--success-color), var(--primary-color));
+}
+
+.room-percentage {
+    font-weight: 700;
+    color: var(--text-color);
+    min-width: 35px;
+    text-align: right;
+    font-size: 0.75rem;
+}
+
+.room-utilization-item.no-rooms {
+    color: var(--muted-text-color);
+    font-style: italic;
+    justify-content: center;
 }
 
 
@@ -338,7 +746,7 @@ a.text-danger:hover {
 
 #weekly-summary {
     border-collapse: separate;
-    border-spacing: 8px;
+    border-spacing: 4px;
 }
 
 #weekly-summary td {
@@ -351,7 +759,7 @@ a.text-danger:hover {
     background-color: var(--card-bg-color);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 12px;
+    padding: 8px 8px 16px 8px;
     margin-bottom: 8px;
     transition: all 0.3s ease;
     animation: none !important;
@@ -370,8 +778,8 @@ a.text-danger:hover {
 
 .room-header {
     font-weight: 700;
-    margin-bottom: 8px;
-    padding-bottom: 8px;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
     border-bottom: 1px solid var(--border-color);
     font-size: 0.95rem;
     color: var(--text-color);
@@ -380,7 +788,7 @@ a.text-danger:hover {
 
 .roles-container {
     display: flex;
-    gap: 12px;
+    gap: 8px;
 }
 
 .role-column {
@@ -389,7 +797,7 @@ a.text-danger:hover {
 
 .role-column strong {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     text-align: center;
     font-size: 0.9rem;
     font-weight: 600;
@@ -400,7 +808,7 @@ a.text-danger:hover {
 
 .role-content {
     font-size: 0.85rem;
-    line-height: 1.5;
+    line-height: 1.4;
     text-align: center;
 }
 
@@ -421,12 +829,12 @@ a.text-danger:hover {
 .role-separator {
     width: 1px;
     background-color: var(--border-color);
-    margin: 0 8px;
+    margin: 0 6px;
 }
 
 .no-schedule {
     color: var(--muted-text-color);
-    padding: 24px 0;
+    padding: 16px 0;
     font-size: 0.9rem;
 }
 
@@ -497,11 +905,6 @@ a.text-danger:hover {
     color: var(--text-color) !important;
 }
 
-#cancel-sidebar .form-switch .form-check-input:checked+.form-check-label {
-    background-color: var(--primary-color) !important;
-    color: var(--card-bg-color) !important;
-}
-
 
 /* Remove complex animations and gradients */
 
@@ -560,23 +963,64 @@ a.text-danger:hover {
 
 .room-brand-name {
     position: absolute;
-    bottom: -10px;
-    left: -10px;
-    background-color: var(--card-bg-color);
-    /* Use currentColor to allow inline style color */
-    color: currentColor;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 2px 6px;
-    border: 1px solid currentColor;
-    border-radius: 4px;
-    z-index: 10;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, currentColor, rgba(255, 255, 255, 0.1));
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 8px 3px 20px;
+    border: 2px solid currentColor;
+    border-radius: 12px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 15;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    min-width: 60px;
+    text-align: center;
+    position: relative;
+}
+
+.room-brand-name:hover {
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.room-brand-name:before {
+    content: '🏷️';
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.room-brand-name:after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, currentColor, transparent, currentColor);
+    border-radius: 14px;
+    z-index: -1;
+    opacity: 0.2;
 }
 
 
 /* Responsive Adjustments */
 
 @media (max-width: 768px) {
+    body {
+        padding-top: 110px;
+    }
     .calendar-container {
         margin: 24px auto;
         padding: 0 16px;
@@ -591,5 +1035,81 @@ a.text-danger:hover {
     .table td {
         padding: 8px 10px !important;
         font-size: 0.85rem !important;
+    }
+    /* Stack brand hours and room utilization cards vertically on mobile */
+    .d-flex.gap-3 {
+        flex-direction: column !important;
+        gap: 1rem !important;
+    }
+    .brand-hours-card,
+    .room-utilization-card {
+        min-width: unset;
+        width: 100%;
+    }
+    /* Adjust fixed navigation arrows for mobile */
+    .fixed-nav-btn {
+        width: 50px;
+        height: 50px;
+        top: 60%;
+    }
+    .fixed-nav-left {
+        left: 10px;
+    }
+    .fixed-nav-right {
+        right: 10px;
+    }
+    .nav-arrow {
+        font-size: 20px;
+    }
+    /* Adjust fixed week display for mobile */
+    .fixed-week-display {
+        top: 15px;
+        right: 15px;
+    }
+    .week-range-container {
+        padding: 10px 20px;
+        border-radius: 16px;
+    }
+    #week-range {
+        font-size: 1rem;
+    }
+    .week-range-container::before {
+        left: 10px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding-top: 100px;
+    }
+    .fixed-nav-btn {
+        width: 45px;
+        height: 45px;
+    }
+    .fixed-nav-left {
+        left: 5px;
+    }
+    .fixed-nav-right {
+        right: 5px;
+    }
+    .nav-arrow {
+        font-size: 18px;
+    }
+    /* Further adjust week display for very small screens */
+    .fixed-week-display {
+        top: 10px;
+        right: 10px;
+    }
+    .week-range-container {
+        padding: 8px 16px;
+        border-radius: 14px;
+    }
+    #week-range {
+        font-size: 0.9rem;
+    }
+    .week-range-container::before {
+        left: 8px;
+        font-size: 0.8rem;
     }
 }

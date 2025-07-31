@@ -56,6 +56,13 @@ class InvoiceItem(models.Model):
 
 
 class Schedule(models.Model):
+    MODIFICATION_STATUS_CHOICES = [
+        ('normal', '正常'),
+        ('late', '遲到'),
+        ('cancelled', '取消'),
+        ('other', '其他'),
+    ]
+    
     date = models.DateField()
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     role = models.CharField(max_length=50, choices=[
@@ -75,6 +82,15 @@ class Schedule(models.Model):
     # 標記是否為延遲取消及遲到時數
     is_late_cancellation = models.BooleanField(default=False)
     late_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    # 新增修改狀態字段
+    modification_status = models.CharField(
+        max_length=20, 
+        choices=MODIFICATION_STATUS_CHOICES, 
+        default='normal',
+        verbose_name='修改狀態'
+    )
+    modification_reason = models.TextField(blank=True, verbose_name='修改原因')
+    modified_at = models.DateTimeField(null=True, blank=True, verbose_name='修改時間')
 
     @property
     def duration(self):

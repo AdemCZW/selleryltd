@@ -113,18 +113,14 @@
         </td>
     </tr>
 </template>
-            <button type="button" id="add-item" class="btn btn-secondary mb-3">Add Item</button>
-            <button type="button" id="add-manual-item" class="btn btn-secondary mb-3 ms-2">新增手動小計</button>
+            <button type="button" id="add-item" class="btn btn-secondary mb-3">Add Auto Calculate</button>
+            <button type="button" id="add-manual-item" class="btn btn-secondary mb-3 ms-2">Add Manual Calculate</button>
             <button type="submit" name="save" class="btn btn-primary mb-3">Save Invoice</button>
             <button type="button" id="preview-pdf-btn" class="btn btn-info mb-3">Preview PDF</button>
             <button type="button" id="download-pdf-btn" class="btn btn-success mb-3">Download PDF</button>
         </form>
     </div>
-    <div id="pdf-preview" style="display:none;" class="mt-3">
-        <canvas id="pdf-canvas"></canvas>
-    </div>
 </div>
-<!-- Data attributes on select options provide person bank info -->
 <!-- Include PDF dependencies -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
@@ -158,10 +154,8 @@
 
             let title = headingEl ? headingEl.textContent.trim() : 'Invoice_Payment';
 
-            // Add receipt_number (Payment for data) to filename if it exists
-            if (receiptNumberEl && receiptNumberEl.value.trim()) {
-                title += '_' + receiptNumberEl.value.trim();
-            }
+            // 不需要再次添加 receipt_number，因為標題已經包含了
+            // 直接使用標題作為檔名基礎
 
             // Replace spaces and special characters for filename
             const filename = title.replace(/\s+/g, '_').replace(/[^\w\-_.]/g, '') + '.pdf';
@@ -170,30 +164,147 @@
                 margin: [10, 10, 10, 10],
                 filename: filename,
                 html2canvas: {
-                    scale: 2,
+                    scale: 1.2,
                     useCORS: true,
-                    // Hide action buttons in cloned document for PDF
+                    backgroundColor: '#ffffff',
+                    // 移除固定寬高，讓它自動適應內容
+                    scrollX: 0,
+                    scrollY: 0,
                     onclone: (clonedDoc) => {
-                        // Hide main action buttons
-                        ['add-item', 'preview-pdf-btn', 'download-pdf-btn'].forEach(id => {
-                            const el = clonedDoc.getElementById(id);
-                            if (el) el.style.display = 'none';
+                        // 隱藏所有按鈕
+                        clonedDoc.querySelectorAll('button, .btn').forEach(btn => {
+                            btn.style.display = 'none';
                         });
-                        // Hide save button by name attribute
-                        clonedDoc.querySelectorAll('button[name="save"]').forEach(btn => btn.style.display = 'none');
-                        // Hide all delete buttons
-                        clonedDoc.querySelectorAll('.delete-item').forEach(btn => btn.style.display = 'none');
-                        // Hide all buttons in general (including 新增項目, 刪除 buttons)
-                        clonedDoc.querySelectorAll('button').forEach(btn => btn.style.display = 'none');
-                        // Strip all non-text elements, leaving only plain text
-                        const container = clonedDoc.getElementById('invoice-content');
-                        const text = container.innerText;
-                        container.innerHTML = '';
-                        text.split(/\n+/).forEach(line => {
-                            if (line.trim()) {
-                                const p = clonedDoc.createElement('p');
-                                p.textContent = line.trim();
-                                container.appendChild(p);
+
+                        // 隱藏刪除欄位
+                        clonedDoc.querySelectorAll('th:last-child, td:last-child').forEach(cell => {
+                            cell.style.display = 'none';
+                        });
+
+                        // 重置所有可能造成裁切的樣式
+                        const style = clonedDoc.createElement('style');
+                        style.textContent = `
+                            * { 
+                                box-sizing: border-box !important;
+                            }
+                            body { 
+                                font-family: Arial, sans-serif !important; 
+                                font-size: 13px !important; 
+                                line-height: 1.4 !important;
+                                color: #000 !important;
+                                margin: 0 !important;
+                                padding: 0 !important;
+                                width: auto !important;
+                                height: auto !important;
+                                overflow: visible !important;
+                            }
+                            .container { 
+                                max-width: none !important; 
+                                width: 100% !important;
+                                padding: 15px !important; 
+                                margin: 0 !important;
+                                overflow: visible !important;
+                            }
+                            h1 { 
+                                font-size: 20px !important; 
+                                margin-bottom: 12px !important; 
+                                text-align: center !important;
+                                font-weight: bold !important;
+                            }
+                            .mb-3, .mb-4 { margin-bottom: 10px !important; }
+                            .row { 
+                                margin: 0 !important;
+                                margin-bottom: 10px !important; 
+                                display: flex !important;
+                                flex-wrap: wrap !important;
+                                width: 100% !important;
+                            }
+                            .col-md-3, .col-md-4, .col-12 { 
+                                padding: 0 5px !important; 
+                                margin-bottom: 6px !important; 
+                                flex: 1 !important;
+                                min-width: 0 !important;
+                            }
+                            label { 
+                                font-weight: bold !important; 
+                                font-size: 11px !important; 
+                                margin-bottom: 3px !important; 
+                                display: block !important;
+                            }
+                            .table { 
+                                font-size: 12px !important; 
+                                margin-bottom: 12px !important; 
+                                width: 100% !important;
+                                border-collapse: collapse !important;
+                                table-layout: fixed !important;
+                            }
+                            .table th { 
+                                padding: 6px 4px !important; 
+                                border: 1px solid #000 !important; 
+                                background-color: #f5f5f5 !important;
+                                font-weight: bold !important;
+                                text-align: center !important;
+                                word-wrap: break-word !important;
+                            }
+                            .table td { 
+                                padding: 5px 4px !important; 
+                                border: 1px solid #ccc !important; 
+                                text-align: center !important;
+                                word-wrap: break-word !important;
+                                overflow: hidden !important;
+                            }
+                            .form-control, input, select { 
+                                border: 1px solid #ccc !important; 
+                                padding: 4px 6px !important; 
+                                font-size: 12px !important; 
+                                background: #fff !important;
+                                width: 100% !important;
+                                display: block !important;
+                                box-sizing: border-box !important;
+                            }
+                            #grand-total { 
+                                font-weight: bold !important; 
+                                font-size: 14px !important; 
+                                text-align: right !important;
+                            }
+                            #bill-to-section { 
+                                padding: 8px !important; 
+                                background-color: #f9f9f9 !important; 
+                                border: 1px solid #ddd !important; 
+                                margin-bottom: 10px !important;
+                            }
+                            .text-end { text-align: right !important; }
+                            strong { font-weight: bold !important; }
+                            
+                            /* 確保表格欄位寬度 */
+                            .table th:nth-child(1), .table td:nth-child(1) { width: 40% !important; }
+                            .table th:nth-child(2), .table td:nth-child(2) { width: 15% !important; }
+                            .table th:nth-child(3), .table td:nth-child(3) { width: 15% !important; }
+                            .table th:nth-child(4), .table td:nth-child(4) { width: 20% !important; }
+                            
+                            /* 防止內容溢出 */
+                            * {
+                                max-width: 100% !important;
+                                overflow: visible !important;
+                            }
+                        `;
+                        clonedDoc.head.appendChild(style);
+
+                        // 將所有input的值轉為文字顯示
+                        clonedDoc.querySelectorAll('input[type="text"], input[type="date"], select').forEach(input => {
+                            const value = input.value || input.textContent || '';
+                            if (value) {
+                                const span = clonedDoc.createElement('span');
+                                span.textContent = value;
+                                span.style.border = '1px solid #ccc';
+                                span.style.padding = '4px 6px';
+                                span.style.display = 'block';
+                                span.style.backgroundColor = '#fff';
+                                span.style.fontSize = '12px';
+                                span.style.width = '100%';
+                                span.style.boxSizing = 'border-box';
+                                span.style.wordWrap = 'break-word';
+                                input.parentNode.replaceChild(span, input);
                             }
                         });
                     }
@@ -205,10 +316,9 @@
                 }
             };
         }
-        // Grab person select and heading elements
+        // Grab form elements
         const personSelect = document.getElementById('id_person');
         const companySelect = document.getElementById('id_company');
-        const addressField = document.getElementById('id_address');
         const billToInfo = document.getElementById('bill-to-info');
         const heading = document.querySelector('#invoice-content h1');
 
@@ -226,10 +336,7 @@
             const selectedOption = companySelect.options[companySelect.selectedIndex];
             const companyName = selectedOption ? selectedOption.textContent : '';
             const companyAddress = selectedOption ? selectedOption.dataset.address || '' : '';
-            // Update hidden address field if present
-            if (addressField) {
-                addressField.value = companyAddress;
-            }
+
             // Update Bill To display
             if (billToInfo) {
                 if (companySelect.value) {
@@ -238,12 +345,19 @@
                     billToInfo.textContent = 'Please select a company';
                 }
             }
-        }
-
-        // Function to update heading and bank details when selection changes
+        } // Function to update heading and bank details when selection changes
         function updateHeading() {
             const name = personSelect.options[personSelect.selectedIndex].text;
-            heading.textContent = 'Invoice_Payment for ' + name;
+            const receiptNumberEl = document.querySelector('input[name="receipt_number"]');
+            const receiptNumber = receiptNumberEl ? receiptNumberEl.value.trim() : '';
+
+            // 組合標題：人名 + Payment for: + Receipt Number
+            let headingText = 'Invoice_Payment for ' + name;
+            if (receiptNumber) {
+                headingText += '_ ' + receiptNumber;
+            }
+
+            heading.textContent = headingText;
             fillBankDetails();
         }
 
@@ -257,10 +371,19 @@
             // Initialize Bill-to info on page load
             fillCompanyAddress();
         }
+
+        // 監聽 receipt_number 輸入變化來更新標題
+        const receiptNumberInput = document.querySelector('input[name="receipt_number"]');
+        if (receiptNumberInput) {
+            receiptNumberInput.addEventListener('input', updateHeading);
+        }
         // Handle adding item rows
         const container = document.getElementById('formset-container');
         const addBtn = document.getElementById('add-item');
+        const manualBtn = document.getElementById('add-manual-item');
         const totalForms = document.querySelector('input[name="{{ formset.prefix }}-TOTAL_FORMS"]');
+
+        // Add regular item
         addBtn.addEventListener('click', () => {
             const idx = Number(totalForms.value);
             const tpl = document.getElementById('empty-item-template');
@@ -272,34 +395,37 @@
             container.appendChild(row);
             totalForms.value = idx + 1;
             attachListeners(row);
-            // Add manual-subtotal-only row
-            const manualBtn = document.getElementById('add-manual-item');
-            manualBtn && manualBtn.addEventListener('click', () => {
-                const idx = Number(totalForms.value);
-                const tpl = document.getElementById('empty-item-template');
-                const row = tpl.content.firstElementChild.cloneNode(true);
-                // Update names and clear values, set manual subtotal
-                row.querySelectorAll('input').forEach(inp => {
-                    inp.name = inp.name.replace('__prefix__', idx);
-                    if (inp.name.endsWith('-total_amount')) {
-                        inp.removeAttribute('readonly');
-                        inp.value = '';
-                    } else {
-                        inp.value = inp.name.endsWith('-hours') || inp.name.endsWith('-rate') ? '' : inp.value;
-                    }
-                });
-                container.appendChild(row);
-                // Mark manual row with background color
-                row.style.backgroundColor = '#fff8dc';
-                const hourInput = row.querySelector('input[name$="-hours"]');
-                const rateInput = row.querySelector('input[name$="-rate"]');
-                const subInput = row.querySelector('input[name$="-total_amount"]');
-                [hourInput, rateInput, subInput].forEach(i => {
-                    if (i) i.style.backgroundColor = '#fff8dc';
-                });
-                totalForms.value = idx + 1;
-                attachListeners(row);
+        });
+
+        // Add manual subtotal row
+        manualBtn.addEventListener('click', () => {
+            const idx = Number(totalForms.value);
+            const tpl = document.getElementById('empty-item-template');
+            const row = tpl.content.firstElementChild.cloneNode(true);
+
+            // Update names and setup manual subtotal
+            row.querySelectorAll('input').forEach(inp => {
+                inp.name = inp.name.replace('__prefix__', idx);
+                if (inp.name.endsWith('-total_amount')) {
+                    inp.removeAttribute('readonly');
+                    inp.value = '';
+                } else {
+                    inp.value = inp.name.endsWith('-hours') || inp.name.endsWith('-rate') ? '' : inp.value;
+                }
             });
+
+            // Mark manual row with background color
+            row.style.backgroundColor = '#fff8dc';
+            const hourInput = row.querySelector('input[name$="-hours"]');
+            const rateInput = row.querySelector('input[name$="-rate"]');
+            const subInput = row.querySelector('input[name$="-total_amount"]');
+            [hourInput, rateInput, subInput].forEach(i => {
+                if (i) i.style.backgroundColor = '#fff8dc';
+            });
+
+            container.appendChild(row);
+            totalForms.value = idx + 1;
+            attachListeners(row);
         });
         // Auto compute totals
         function attachListeners(elem) {
@@ -307,6 +433,7 @@
             const rate = elem.querySelector('input[name$="-rate"]');
             const total = elem.querySelector('input[name$="-total_amount"]');
             let manualOverride = false;
+
             // Recalculate subtotal unless manually overridden
             const update = () => {
                 if (!manualOverride) {
@@ -314,25 +441,16 @@
                 }
                 updateGrandTotal();
             };
+
             hours.addEventListener('input', update);
             rate.addEventListener('input', update);
+
             // Detect manual edits to Subtotal to prevent auto-override
             total.addEventListener('input', () => {
                 manualOverride = true;
                 updateGrandTotal();
             });
-            // Bind delete button for each row
-            const deleteBtn = elem.querySelector('.delete-item');
-            if (deleteBtn) {
-                deleteBtn.addEventListener('click', function() {
-                    const delInput = elem.querySelector('input[type="hidden"][name$="-DELETE"]');
-                    if (delInput) {
-                        delInput.value = 'on';
-                    }
-                    elem.style.display = 'none';
-                    updateGrandTotal();
-                });
-            }
+
             update();
         }
         document.querySelectorAll('.item-form').forEach(form => attachListeners(form));

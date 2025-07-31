@@ -7,6 +7,7 @@ from .models import Person, Invoice, Schedule, Brand, Company
 from .forms import PersonForm, InvoiceForm, InvoiceItemFormSet, ScheduleForm, BrandForm
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
+from django.template.loader import render_to_string
 import json
 from decimal import Decimal
 from .forms import ScheduleForm
@@ -204,6 +205,13 @@ def calendar(request):
         progress = round((hours / total_coop * 100),
                          2) if total_coop > 0 else 0.0
         setattr(brand, 'progress', progress)
+    
+    # 獲取修改記錄（遲到和取消的記錄）
+    modification_records = Schedule.objects.filter(
+        modification_status__in=['late', 'cancelled'],
+        modified_at__isnull=False
+    ).select_related('person', 'brand').order_by('-modified_at')[:20]  # 最近20筆記錄
+    
     return render(request, 'liveapp/date_form.html', {
         'persons': persons,
         'schedules': schedules,
@@ -211,6 +219,7 @@ def calendar(request):
         'brands': brands,
         'monthly_hours_by_brand': monthly_hours_by_brand,
         'current_month': current_month,
+        'modification_records': modification_records,
         # for delete redirects
         'selected_date_str': request.GET.get('date', ''),
     })
@@ -308,8 +317,14 @@ def cancel_schedule(request):
 
             for schedule in schedules_to_cancel:
                 person = schedule.person
+                
+                # 記錄修改狀態和時間
+                schedule.modified_at = timezone.now()
+                
                 if reason == 'late':
                     person.late_count += 1
+                    schedule.modification_status = 'late'
+                    schedule.modification_reason = data.get('modification_reason', '遲到')
                     # record late hours on schedule
                     try:
                         schedule.late_hours = Decimal(str(late_hours))
@@ -317,6 +332,9 @@ def cancel_schedule(request):
                         schedule.late_hours = Decimal('0')
                 elif reason == 'cancel':
                     person.cancel_count += 1
+                    schedule.modification_status = 'cancelled'
+                    schedule.modification_reason = data.get('modification_reason', '取消直播')
+                    
                 person.save()
 
                 # mark late cancellation flag
@@ -332,3 +350,149 @@ def cancel_schedule(request):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
     return JsonResponse({'success': False, 'error': '僅支援 POST 請求'}, status=405)
+
+
+@csrf_exempt
+def get_employee_schedule(request):
+    """獲取指定員工的班表信息"""
+    if request.method == 'GET':
+        employee_id = request.GET.get('employee_id')
+        if not employee_id:
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'employee_name': '',
+                    'stats': {
+                        'total_hours': 0,
+                        'attendance_rate': 0,
+                        'total_schedules': 0,
+                        'cancelled_schedules': 0,
+                    },
+                    'schedules': []
+                }
+            })
+        
+        try:
+            person = Person.objects.get(id=employee_id)
+            
+            # 獲取近30天的班表
+            from datetime import timedelta
+            today = timezone.localdate()
+            start_date = today - timedelta(days=30)
+            end_date = today + timedelta(days=30)
+            
+            schedules = Schedule.objects.filter(
+                person=person,
+                date__range=(start_date, end_date)
+            ).select_related('brand').order_by('-date', 'start_time')
+            
+            # 計算統計信息
+            current_month_schedules = Schedule.objects.filter(
+                person=person,
+                date__year=today.year,
+                date__month=today.month
+            )
+            
+            total_hours = sum(s.duration for s in current_month_schedules)
+            cancelled_count = sum(1 for s in current_month_schedules if s.is_late_cancellation)
+            total_count = current_month_schedules.count()
+            attendance_rate = round((total_count - cancelled_count) / total_count * 100, 1) if total_count > 0 else 100
+            
+            # 構建班表數據
+            schedule_data = []
+            for schedule in schedules:
+                schedule_data.append({
+                    'id': schedule.id,
+                    'date': schedule.date.strftime('%Y-%m-%d'),
+                    'date_display': schedule.date.strftime('%m/%d'),
+                    'start_time': schedule.start_time.strftime('%H:%M'),
+                    'end_time': schedule.end_time.strftime('%H:%M'),
+                    'duration': float(schedule.duration),
+                    'role': schedule.role,
+                    'brand_name': schedule.brand.name if schedule.brand else '無品牌',
+                    'brand_color': schedule.brand.color if schedule.brand and hasattr(schedule.brand, 'color') else '#6c757d',
+                    'room': schedule.room,
+                    'is_cancelled': schedule.is_late_cancellation,
+                    'modification_status': schedule.modification_status,
+                    'is_past': schedule.date < today,
+                    'is_today': schedule.date == today,
+                    'is_future': schedule.date > today,
+                })
+            
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'employee_name': person.name,
+                    'stats': {
+                        'total_hours': round(total_hours, 1),
+                        'attendance_rate': attendance_rate,
+                        'total_schedules': total_count,
+                        'cancelled_schedules': cancelled_count,
+                    },
+                    'schedules': schedule_data
+                }
+            })
+            
+        except Person.DoesNotExist:
+            return JsonResponse({'success': False, 'error': '員工不存在'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'success': False, 'error': '僅支援 GET 請求'}, status=405)
+
+
+def invoice_pdf_view(request, invoice_id):
+    """生成發票的PDF預覽頁面"""
+    invoice = get_object_or_404(Invoice, id=invoice_id)
+    items = invoice.items.all()
+    
+    # 獲取人員銀行信息
+    person = invoice.person
+    
+    context = {
+        'invoice': invoice,
+        'items': items,
+        'person': person,
+        'total_amount': invoice.total_amount,
+        'is_pdf_view': True,  # 標記這是PDF預覽模式
+    }
+    
+    return render(request, 'liveapp/invoice_pdf_template.html', context)
+
+
+def invoice_pdf_data(request, invoice_id):
+    """提供發票的JSON數據用於前端PDF生成"""
+    invoice = get_object_or_404(Invoice, id=invoice_id)
+    items = invoice.items.all()
+    
+    # 準備發票數據
+    invoice_data = {
+        'id': invoice.id,
+        'receipt_number': invoice.receipt_number,
+        'date': invoice.date.strftime('%Y-%m-%d'),
+        'company': invoice.company,
+        'address': invoice.address,
+        'description': invoice.description,
+        'total_amount': str(invoice.total_amount),
+        'person': {
+            'name': invoice.person.name,
+            'bank': invoice.person.bank,
+            'bank_name': invoice.person.bank_name,
+            'account': invoice.person.account,
+            'sort_code': invoice.person.sort_code,
+        },
+        'items': [
+            {
+                'description': item.description,
+                'hours': str(item.hours),
+                'rate': str(item.rate),
+                'total_amount': str(item.total_amount),
+            }
+            for item in items
+        ]
+    }
+    
+    return JsonResponse({
+        'success': True,
+        'data': invoice_data
+    })

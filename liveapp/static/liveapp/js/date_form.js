@@ -16,14 +16,14 @@ function checkForNotifications() {
     const status = urlParams.get("status");
 
     if (status === "added") {
-        showNotification("✅ 排班新增成功！", "success");
+        showNotification("✅ Schedule added successfully!", "success");
     } else if (status === "deleted") {
-        showNotification("🗑️ 排班刪除成功！", "delete");
+        showNotification("🗑️ Schedule deleted successfully!", "delete");
     } else if (status === "error") {
-        showNotification("❌ 操作失敗，請重試", "error");
+        showNotification("❌ Operation failed, please try again", "error");
     }
 
-    // 清理 URL 參數
+    // Clean URL parameters
     if (status) {
         const url = new URL(window.location);
         url.searchParams.delete("status");
@@ -32,7 +32,7 @@ function checkForNotifications() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-            // 頁面載入時檢查通知
+            // Check notifications on page load
             checkForNotifications();
 
             const weekRange = document.getElementById("week-range");
@@ -48,6 +48,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const endTimeInput = document.getElementById("end-time");
             const cancelSidebar = document.getElementById("cancel-sidebar");
             const sidebarClose = document.getElementById("sidebar-close");
+            const employeeScheduleSidebar = document.getElementById("employee-schedule-sidebar");
+            const employeeScheduleBtn = document.getElementById("show-employee-schedule");
+            const employeeScheduleClose = document.getElementById("employee-sidebar-close");
+            const employeeScheduleSelect = document.getElementById("employee-schedule-select");
             const otherReasonContainer = document.getElementById(
                 "other-reason-container"
             );
@@ -71,15 +75,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
             });
 
-            // 點擊側邊欄關閉按鈕
+            // Click sidebar close button
             sidebarClose.addEventListener("click", () => {
                 cancelSidebar.style.transform = "translateX(100%)";
                 setTimeout(() => {
                     cancelSidebar.style.display = "none";
-                }, 300); // 等動畫結束
+                }, 300); // Wait for animation to complete
             });
 
-            // 確認取消按鈕事件
+            // Confirm cancel button event
             document
                 .getElementById("confirm-cancel-btn")
                 .addEventListener("click", function() {
@@ -93,6 +97,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     );
                     let reason = reasonRadio ? reasonRadio.value : "cancel";
                     let otherReason = "";
+                    let modificationReason = document.getElementById("modification-reason-input").value.trim();
+
+                    // If no notes are provided, use default reason
+                    if (!modificationReason) {
+                        if (reason === "late") {
+                            modificationReason = "Late";
+                        } else if (reason === "cancel") {
+                            modificationReason = "Live stream cancelled";
+                        }
+                    }
+
                     if (reason === "late") {
                         const parsed = parseFloat(lateHoursInput.value);
                         lateHours = isNaN(parsed) ? 0 : parsed;
@@ -103,14 +118,15 @@ document.addEventListener("DOMContentLoaded", () => {
                             .getElementById("other-reason-input")
                             .value.trim();
                         if (!otherReason) {
-                            showNotification("❌ 請輸入其他原因", "error");
+                            showNotification("❌ Please enter other reason", "error");
                             return;
                         }
+                        modificationReason = otherReason; // If other reason, use the other reason as modification reason
                     }
 
                     if (
                         confirm(
-                            `確定要以 "${reasonRadio.labels[0].textContent}" 為由，取消 ${date} 房間 ${room} 的排班嗎？`
+                            `Are you sure you want to cancel the schedule for room ${room} on ${date} with reason "${reasonRadio.labels[0].textContent}"?`
                         )
                     ) {
                         fetch("/cancel-schedule/", {
@@ -124,28 +140,29 @@ document.addEventListener("DOMContentLoaded", () => {
                                     room: room,
                                     reason: reason,
                                     other_reason: otherReason,
-                                    late_hours: lateHours
+                                    late_hours: lateHours,
+                                    modification_reason: modificationReason
                                 }),
                             })
                             .then((response) => response.json())
                             .then((data) => {
                                 if (data.success) {
-                                    showNotification("✅ 操作成功！", "success");
+                                    showNotification("✅ Operation successful!", "success");
                                     setTimeout(() => window.location.reload(), 1000);
                                 } else {
-                                    showNotification("❌ " + (data.error || "操作失敗"), "error");
+                                    showNotification("❌ " + (data.error || "Operation failed"), "error");
                                 }
                             })
                             .catch((error) => {
                                 console.error("Error:", error);
-                                showNotification("❌ 網路錯誤", "error");
+                                showNotification("❌ Network error", "error");
                             });
                     }
                 });
 
             // Build schedulesByDate mapping from Django context
-            // 從 json_script 取得排班資料
-            // 從 json_script 取得排班資料
+            // Get schedule data from json_script
+            // Get schedule data from json_script
             let schedulesByDate = {};
             const schedulesEl = document.getElementById("schedules-data");
             if (schedulesEl) {
@@ -158,33 +175,33 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const months = [
-                "一月",
-                "二月",
-                "三月",
-                "四月",
-                "五月",
-                "六月",
-                "七月",
-                "八月",
-                "九月",
-                "十月",
-                "十一月",
-                "十二月",
+                "January",
+                "February",
+                "March",
+                "April",
+                "May",
+                "June",
+                "July",
+                "August",
+                "September",
+                "October",
+                "November",
+                "December",
             ];
-            // 使用 body data-attribute 作為初始日期，若無則使用今天
+            // Use body data-attribute as initial date, otherwise use today
             const selectedDateParam = document.body.dataset.selectedDate || "";
             const today = new Date();
             const initialDate = selectedDateParam ?
                 new Date(selectedDateParam) :
                 new Date();
-            // 計算本週一
+            // Calculate Monday of this week
             function getMonday(d) {
                 d = new Date(d);
                 const day = d.getDay(),
                     diff = d.getDate() - day + (day === 0 ? -6 : 1);
                 return new Date(d.setDate(diff));
             }
-            // 設定週一起始：若指定日期則以該日期為週 否則以今天為週
+            // Set Monday start: use specified date's week if provided, otherwise use today's week
             let currentMonday = getMonday(initialDate);
 
             function resetSelections() {
@@ -207,7 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
             empSelect.addEventListener("change", function() {
                 if (this.value) {
                     document.getElementById("form-person").value = this.value;
-                    // 當選擇員工時，檢查是否已選擇類型來決定是否顯示時間段
+                    // When selecting an employee, check if type is already selected to decide whether to show time slots
                     const checkedRole = document.querySelector(
                         'input[name="role-radio"]:checked'
                     );
@@ -230,7 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 radio.addEventListener("change", function() {
                     if (this.checked) {
                         document.getElementById("form-role").value = this.value;
-                        // 當選擇類型時，檢查是否已選擇員工來決定是否顯示時間段
+                        // When selecting a type, check if employee is already selected to decide whether to show time slots
                         if (empSelect.value) {
                             timeSection.style.display = "";
                         }
@@ -239,7 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             function renderWeek(monday) {
-                // 顯示本週區間
+                // Display current week range
                 const weekDates = [];
                 let weekStr = "";
                 let row = document.createElement("tr");
@@ -248,12 +265,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     d.setDate(monday.getDate() + i);
                     weekDates.push(d);
                     const cell = document.createElement("td");
-                    // 使用本地年月日格式 yyyy-MM-dd，避免 toISOString 時區偏移
+                    // Use local date format yyyy-MM-dd to avoid toISOString timezone offset
                     const year = d.getFullYear();
                     const month = String(d.getMonth() + 1).padStart(2, "0");
                     const day = String(d.getDate()).padStart(2, "0");
                     const dateStr = `${year}-${month}-${day}`;
-                    // 日期圓圈
+                    // Date circle
                     cell.innerHTML = `<span class=\"calendar-day-span\" data-date=\"${dateStr}\">${d.getDate()}</span>`;
                     if (d.toDateString() === today.toDateString()) {
                         cell.querySelector("span").classList.add("calendar-today");
@@ -268,7 +285,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         selectedDateSection.style.display = "";
                         selectedDateSpan.textContent = dateStr;
                         document.getElementById("form-date").value = dateStr;
-                        // 更新 URL 參數以維持所選日期
+                        // Update URL parameters to maintain selected date
                         const newUrl = `${window.location.pathname}?date=${dateStr}`;
                         window.history.replaceState({}, "", newUrl);
                         employeeRoleSection.style.display = "";
@@ -279,7 +296,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         timeSection.style.display = "none";
                         document.getElementById("form-start-time").value = startTimeInput.value;
                         document.getElementById("form-end-time").value = endTimeInput.value;
-                        // 更新右側排班列表
+                        // Update right-side schedule list
                         const scheduleList = document.getElementById("schedule-list");
                         scheduleList.innerHTML = "";
                         const daySchedules = schedulesByDate[dateStr] || [];
@@ -287,9 +304,9 @@ document.addEventListener("DOMContentLoaded", () => {
                             daySchedules.forEach((s) => {
                                 const tr = document.createElement("tr");
                                 const roleClass =
-                                    s.role === "主播" ?
+                                    (s.role === "Streamer" || s.role === "主播") ?
                                     "anchor-role" :
-                                    s.role === "運營" ?
+                                    (s.role === "Operations" || s.role === "運營") ?
                                     "operator-role" :
                                     "";
                                 tr.innerHTML = `
@@ -302,23 +319,23 @@ document.addEventListener("DOMContentLoaded", () => {
                                         <td>
                                             <a href="/schedule/edit/${
                                               s.id
-                                            }/?date=${dateStr}" class="text-primary me-2">編輯</a>
+                                            }/?date=${dateStr}" class="text-primary me-2">Edit</a>
                                             <a href="#" class="text-danger delete-schedule" data-schedule-id="${
                                               s.id
-                                            }" data-date="${dateStr}">刪除</a>
+                                            }" data-date="${dateStr}">Delete</a>
                                         </td>
                                     `;
                                 scheduleList.appendChild(tr);
                             });
 
-                            // 添加刪除事件監聽器
+                            // Add delete event listeners
                             document.querySelectorAll(".delete-schedule").forEach((link) => {
                                 link.addEventListener("click", function(e) {
                                     e.preventDefault();
                                     const scheduleId = this.dataset.scheduleId;
                                     const date = this.dataset.date;
 
-                                    if (confirm("確定要刪除這個排班嗎？")) {
+                                    if (confirm("Are you sure you want to delete this schedule?")) {
                                         fetch(`/date-form/delete/${scheduleId}/`, {
                                                 method: "POST",
                                                 headers: {
@@ -331,26 +348,26 @@ document.addEventListener("DOMContentLoaded", () => {
                                             .then((response) => response.json())
                                             .then((data) => {
                                                 if (data.success) {
-                                                    showNotification("🗑️ 排班刪除成功！", "delete");
-                                                    // 重新載入頁面資料
+                                                    showNotification("🗑️ Schedule deleted successfully!", "delete");
+                                                    // Reload page data
                                                     window.location.reload();
                                                 } else {
                                                     showNotification(
-                                                        "❌ " + (data.error || "刪除失敗，請重試"),
+                                                        "❌ " + (data.error || "Delete failed, please try again"),
                                                         "error"
                                                     );
                                                 }
                                             })
                                             .catch((error) => {
                                                 console.error("Error:", error);
-                                                showNotification("❌ 網路錯誤，請重試", "error");
+                                                showNotification("❌ Network error, please try again", "error");
                                             });
                                     }
                                 });
                             });
                         } else {
                             const tr = document.createElement("tr");
-                            tr.innerHTML = '<td colspan="7">無排班資料。</td>';
+                            tr.innerHTML = '<td colspan="7">No schedule data.</td>';
                             scheduleList.appendChild(tr);
                         }
                     });
@@ -372,7 +389,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "0"
     )}-${String(end.getDate()).padStart(2, "0")}`;
                 weekRange.textContent = weekStr;
-                // 更新本週排班總覽（橫向，cell 內直向顯示主播/運營）
+                // Update weekly schedule overview (horizontal layout, showing streamers/operations vertically in cells)
                 const headerRow = document.getElementById("weekly-summary-header");
                 const bodyRow = document.getElementById("weekly-summary-body");
                 if (headerRow && bodyRow) {
@@ -394,21 +411,21 @@ document.addEventListener("DOMContentLoaded", () => {
                                 }
                                 const anchorNames =
                                     list
-                                    .filter((s) => s.role === "主播")
-                                    .map((s) => `${s.person_name} (房${s.room})`)
-                                    .join("<br>") || "無";
+                                    .filter((s) => s.role === "Streamer" || s.role === "主播")
+                                    .map((s) => `${s.person_name} (Room${s.room})`)
+                                    .join("<br>") || "None";
                                 const opNames =
                                     list
-                                    .filter((s) => s.role === "運營")
-                                    .map((s) => `${s.person_name} (房${s.room})`)
-                                    .join("<br>") || "無";
+                                    .filter((s) => s.role === "Operations" || s.role === "運營")
+                                    .map((s) => `${s.person_name} (Room${s.room})`)
+                                    .join("<br>") || "None";
                                 // 表頭日期
                                 const th = document.createElement("th");
                                 th.textContent = ds;
                                 headerRow.appendChild(th);
-                                // 表身 cell：垂直顯示主播 & 運營
+                                // Table body cell: display streamers & operations vertically
                                 const td = document.createElement("td");
-                                // 依房間分類，每房間顯示主播 & 運營
+                                // Group by room, display streamers & operations for each room
                                 {
                                     const rooms = Array.from(new Set(list.map((s) => s.room))).sort(
                                         (a, b) => a - b
@@ -417,18 +434,18 @@ document.addEventListener("DOMContentLoaded", () => {
                                     rooms.forEach((room) => {
                                                 const anchors =
                                                     list
-                                                    .filter((s) => s.role === "主播" && s.room === room)
+                                                    .filter((s) => (s.role === "Streamer" || s.role === "主播") && s.room === room)
                                                     .map((s) => `${s.person_name}`)
-                                                    .join("<br>") || "無";
+                                                    .join("<br>") || "None";
                                                 const ops =
                                                     list
-                                                    .filter((s) => s.role === "運營" && s.room === room)
+                                                    .filter((s) => (s.role === "Operations" || s.role === "運營") && s.room === room)
                                                     .map((s) => `${s.person_name}`)
-                                                    .join("<br>") || "無";
+                                                    .join("<br>") || "None";
 
-                                                // 获取主播的时间作为基准时间
+                                                // Get streamer's time as reference time
                                                 const anchorTimes = list.filter(
-                                                    (s) => s.role === "主播" && s.room === room
+                                                    (s) => (s.role === "Streamer" || s.role === "主播") && s.room === room
                                                 );
                                                 const timeInfo =
                                                     anchorTimes.length > 0 ?
@@ -437,16 +454,16 @@ document.addEventListener("DOMContentLoaded", () => {
                                                     .join(", ") :
                                                     "";
 
-                                                // 房间编号旁边显示时间
-                                                const roomTitle = `房間 ${room}${
+                                                // Display time next to room number
+                                                const roomTitle = `Room ${room}${
               timeInfo ? " (" + timeInfo + ")" : ""
             }`;
 
-                                                // 檢查此房間是否有任何延遲取消的排班
+                                                // Check if this room has any late cancellation schedules
                                                 const isLateCancelled = list.some(
                                                     (s) => s.room === room && s.is_late_cancellation
                                                 );
-                                                // 檢查班表是否已完成（未取消且最晚結束時間已過）
+                                                // Check if schedule is completed (not cancelled and latest end time has passed)
                                                 const roomSchedules = list.filter((s) => s.room === room);
                                                 // Get current playing brand for this room
                                                 const brandName = roomSchedules.length > 0 ? roomSchedules[0].brand_name : '';
@@ -473,16 +490,16 @@ document.addEventListener("DOMContentLoaded", () => {
                                                 : ""
                                             }
                                             <span class="close-btn" style="position:absolute;bottom:-8px;right:-8px;width:24px;height:24px;background-color:rgba(0,0,0,0.6);border:2px solid var(--tech-accent1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--tech-accent1);cursor:pointer;z-index:10;">&times;</span>
-                                            <!-- 打開取消直播側邊欄 -->
+                                            <!-- Open cancel stream sidebar -->
                                             <div class="room-header">${roomTitle}</div>
                                             <div class="roles-container">
                                                 <div class="role-column">
-                                                    <strong class="anchor-role">主播</strong>
+                                                    <strong class="anchor-role">Streamers</strong>
                                                     <div class="role-content anchor-content">${anchors}</div>
                                                 </div>
                                                 <div class="role-separator"></div>
                                                 <div class="role-column">
-                                                    <strong class="operator-role">運營</strong>
+                                                    <strong class="operator-role">Operations</strong>
                                                     <div class="role-content operator-content">${ops}</div>
                                                 </div>
                                             </div>
@@ -491,28 +508,30 @@ document.addEventListener("DOMContentLoaded", () => {
                                     `;
                     });
                     if (html === "") {
-                        html = '<div class="no-schedule">無排班</div>';
+                        html = '<div class="no-schedule">No Schedule</div>';
                     }
                     td.innerHTML = html;
                 }
                 bodyRow.appendChild(td);
             });
         }
-        // 更新本週已加入的品牌顯示
+        // Update current week brands display
         (function updateCurrentBrands() {
-            // 統計每個品牌的本週總時數
+            // Calculate total hours for each brand this week
             const brandTimeMap = {};
             const brandColorMap = {};
+            
             weekDates.forEach((d) => {
                 const y = d.getFullYear();
                 const m = String(d.getMonth() + 1).padStart(2, '0');
                 const dd = String(d.getDate()).padStart(2, '0');
                 const ds = `${y}-${m}-${dd}`;
                 const list = schedulesByDate[ds] || [];
+                
                 list.forEach((s) => {
                     if (s.brand_name) {
-                        // Only count anchor durations
-                        if (s.role === '主播') {
+                        // Count both English and Chinese roles for compatibility
+                        if (s.role === 'Streamer' || s.role === '主播') {
                             if (!brandTimeMap[s.brand_name]) brandTimeMap[s.brand_name] = 0;
                             brandTimeMap[s.brand_name] += s.duration || 0;
                         }
@@ -526,14 +545,86 @@ document.addEventListener("DOMContentLoaded", () => {
             const brandsArray = Object.keys(brandTimeMap);
             const brandsEl = document.getElementById('current-brands');
             if (brandsEl) {
-                brandsEl.classList.add('brand-hours-list');
+                brandsEl.className = 'brand-hours-card';
                 if (brandsArray.length) {
-                    brandsEl.innerHTML = brandsArray.map(b => {
-                        const color = brandColorMap[b] || '#0a1a2f';
-                        return `<span class="brand-hours-item" style="background:none;border:none;color:${color}"><span class="brand-icon">🏷️</span><span class="brand-name" style="color:${color}">${b}</span> <span class="brand-hours-value" style="color:${color}">${brandTimeMap[b].toFixed(1)} 小時</span></span>`;
-                    }).join('');
+                    const headerHtml = '<div class="brand-hours-header">Weekly Brand Hours</div>';
+                    const itemsHtml = '<div class="brand-hours-list">' + 
+                        brandsArray.map(b => {
+                            const color = brandColorMap[b] || '#0a1a2f';
+                            return `<span class="brand-hours-item" style="border-color: ${color};">
+                                <span class="brand-icon" style="color: ${color};">🏷️</span>
+                                <span class="brand-name" style="color: ${color};">${b}</span>
+                                <span class="brand-hours-value" style="color: ${color};">${brandTimeMap[b].toFixed(1)}h</span>
+                            </span>`;
+                        }).join('') + 
+                        '</div>';
+                    brandsEl.innerHTML = headerHtml + itemsHtml;
                 } else {
-                    brandsEl.innerHTML = '<span class="brand-hours-item">無品牌</span>';
+                    brandsEl.innerHTML = '<div class="brand-hours-header">Weekly Brand Hours</div><div class="brand-hours-list"><span class="brand-hours-item no-brands">No brands scheduled</span></div>';
+                }
+            }
+        })();
+        
+        // Update current week room utilization display
+        (function updateRoomUtilization() {
+            // Calculate total hours for each room this week
+            const roomTimeMap = {};
+            const totalWeekHours = 7 * 24; // Total possible hours in a week
+            const workingHoursPerDay = 12; // Assume 12 working hours per day (can be adjusted)
+            const totalWorkingHours = 7 * workingHoursPerDay;
+            
+            weekDates.forEach((d) => {
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                const ds = `${y}-${m}-${dd}`;
+                const list = schedulesByDate[ds] || [];
+                
+                list.forEach((s) => {
+                    if (s.room) {
+                        // Count both English and Chinese roles for compatibility
+                        if (s.role === 'Streamer' || s.role === '主播') {
+                            if (!roomTimeMap[s.room]) roomTimeMap[s.room] = 0;
+                            roomTimeMap[s.room] += s.duration || 0;
+                        }
+                    }
+                });
+            });
+            
+            // Convert to array and sort by utilization (highest first)
+            const roomsArray = Object.keys(roomTimeMap).map(room => ({
+                room: parseInt(room),
+                hours: roomTimeMap[room],
+                percentage: Math.min(100, (roomTimeMap[room] / totalWorkingHours * 100))
+            })).sort((a, b) => b.percentage - a.percentage);
+            
+            const roomEl = document.getElementById('room-utilization');
+            if (roomEl) {
+                roomEl.className = 'room-utilization-card';
+                if (roomsArray.length) {
+                    const headerHtml = '<div class="room-utilization-header">Room Utilization</div>';
+                    const itemsHtml = '<div class="room-utilization-list">' + 
+                        roomsArray.map(r => {
+                            let usageClass = 'low-usage';
+                            if (r.percentage >= 80) usageClass = 'high-usage';
+                            else if (r.percentage >= 50) usageClass = 'medium-usage';
+                            
+                            return `<div class="room-utilization-item">
+                                <div class="room-info">
+                                    <span class="room-number">Room ${r.room}</span>
+                                </div>
+                                <div class="room-progress-container">
+                                    <div class="room-progress-bar">
+                                        <div class="room-progress-fill ${usageClass}" style="width: ${r.percentage}%"></div>
+                                    </div>
+                                </div>
+                                <div class="room-percentage">${r.percentage.toFixed(1)}%</div>
+                            </div>`;
+                        }).join('') + 
+                        '</div>';
+                    roomEl.innerHTML = headerHtml + itemsHtml;
+                } else {
+                    roomEl.innerHTML = '<div class="room-utilization-header">Room Utilization</div><div class="room-utilization-list"><div class="room-utilization-item no-rooms">No rooms scheduled</div></div>';
                 }
             }
         })();
@@ -580,9 +671,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     roomSchedules.forEach((s) => {
                         const tr = document.createElement("tr");
                         const roleClass =
-                            s.role === "主播" ?
+                            (s.role === "Streamer" || s.role === "主播") ?
                             "anchor-role" :
-                            s.role === "運營" ?
+                            (s.role === "Operations" || s.role === "運營") ?
                             "operator-role" :
                             "";
                         tr.innerHTML = `
@@ -605,7 +696,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                     personSelectContainer.style.display = "block";
                 } else {
-                    scheduleDetailsContainer.textContent = "無排班資料。";
+                    scheduleDetailsContainer.textContent = "No schedule data.";
                     personSelectContainer.style.display = "none";
                 }
 
@@ -658,21 +749,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 .then((response) => response.json())
                 .then((data) => {
                     if (data.success) {
-                        showNotification("✅ 排班新增成功！", "success");
-                        // 重新整理當前頁面以顯示更新後的排班
+                        showNotification("✅ Schedule added successfully!", "success");
+                        // Reload current page to show updated schedule
                         setTimeout(() => {
                             window.location.reload();
                         }, 1000);
                     } else {
                         showNotification(
-                            "❌ " + (data.error || "操作失敗，請重試"),
+                            "❌ " + (data.error || "Operation failed, please try again"),
                             "error"
                         );
                     }
                 })
                 .catch((error) => {
                     console.error("Error:", error);
-                    showNotification("❌ 網路錯誤，請重試", "error");
+                    showNotification("❌ Network error, please try again", "error");
                 });
         }); // end scheduleForm.addEventListener
     } // end if(scheduleForm)
@@ -692,7 +783,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // 更新本週總覽旁邊的當前品牌顯示
+    // Update current brand display next to weekly overview
     const brandSelect = document.getElementById('brand-select');
     const currentBrandEl = document.getElementById('current-brand');
     if (brandSelect && currentBrandEl) {
@@ -708,4 +799,133 @@ document.addEventListener("DOMContentLoaded", () => {
             renderWeek(currentMonday);
         });
     }
+
+    // 員工班表查看功能
+    if (employeeScheduleBtn) {
+        employeeScheduleBtn.addEventListener('click', function() {
+            employeeScheduleSidebar.style.transform = "translateX(0)";
+            // 不在這裡載入數據，等用戶選擇員工後再載入
+        });
+    }
+
+    if (employeeScheduleClose) {
+        employeeScheduleClose.addEventListener('click', function() {
+            employeeScheduleSidebar.style.transform = "translateX(-100%)";
+        });
+    }
+
+    if (employeeScheduleSelect) {
+        employeeScheduleSelect.addEventListener('change', function() {
+            if (this.value) {
+                loadEmployeeSchedule(this.value);
+            } else {
+                clearEmployeeScheduleData();
+            }
+        });
+    }
 }); // end DOMContentLoaded listener
+
+// 載入員工班表數據
+function loadEmployeeSchedule(employeeId = null) {
+    const url = new URL(window.location.origin + '/api/employee-schedule/');
+    if (employeeId) {
+        url.searchParams.append('employee_id', employeeId);
+    }
+
+    console.log('Loading employee schedule from:', url.toString()); // 調試信息
+
+    fetch(url)
+        .then(response => {
+            console.log('Response status:', response.status); // 調試信息
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data); // 調試信息
+            if (data.success) {
+                updateEmployeeScheduleDisplay(data.data);
+            } else {
+                showNotification('❌ Failed to load employee schedule: ' + (data.error || 'Unknown error'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading employee schedule:', error);
+            showNotification('❌ Network error, please try again', 'error');
+        });
+}
+
+// 更新員工班表顯示
+function updateEmployeeScheduleDisplay(data) {
+    console.log('Updating display with data:', data); // 調試信息
+    
+    // 更新統計數據
+    document.getElementById('employee-total-hours').textContent = data.stats.total_hours || '0';
+    document.getElementById('employee-attendance-rate').textContent = data.stats.attendance_rate + '%' || '0%';
+
+    // 顯示統計信息和班表列表
+    document.getElementById('employee-stats').style.display = 'block';
+    document.getElementById('employee-schedule-list').style.display = 'block';
+
+    // Update schedule list
+    const scheduleContainer = document.getElementById('schedule-items-container');
+    if (!data.schedules || data.schedules.length === 0) {
+        scheduleContainer.innerHTML = '<div class="text-muted text-center py-3">No schedule data available</div>';
+        return;
+    }
+
+    const scheduleItems = data.schedules.map(schedule => {
+        const statusBadge = getStatusBadge(schedule);
+        const modificationInfo = schedule.modification_status && schedule.modification_status !== 'none' ? 
+            `<small class="text-muted d-block">${getModificationText(schedule.modification_status)}</small>` : '';
+        
+        return `
+            <div class="schedule-item border-bottom py-2">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="fw-medium">${schedule.date_display || schedule.date} ${schedule.start_time}-${schedule.end_time}</div>
+                        <div class="text-muted small">${schedule.brand_name} - 房間${schedule.room}</div>
+                        ${modificationInfo}
+                    </div>
+                    <div class="ms-2">
+                        ${statusBadge}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    scheduleContainer.innerHTML = scheduleItems;
+}
+
+// 獲取狀態徽章
+function getStatusBadge(schedule) {
+    if (schedule.is_cancelled) {
+        return '<span class="badge bg-danger">已取消</span>';
+    } else if (schedule.is_past) {
+        return '<span class="badge bg-success">已完成</span>';
+    } else if (schedule.is_today) {
+        return '<span class="badge bg-warning">進行中</span>';
+    } else if (schedule.is_future) {
+        return '<span class="badge bg-primary">已排班</span>';
+    }
+    return '<span class="badge bg-secondary">未知</span>';
+}
+
+// 獲取修改狀態文字
+function getModificationText(modificationStatus) {
+    const texts = {
+        'cancelled': '已取消',
+        'late': '遲到',
+        'rescheduled': '已調班'
+    };
+    return texts[modificationStatus] || '';
+}
+
+// 清空員工班表數據
+function clearEmployeeScheduleData() {
+    document.getElementById('employee-total-hours').textContent = '0';
+    document.getElementById('employee-attendance-rate').textContent = '0';
+    document.getElementById('employee-stats').style.display = 'none';
+    document.getElementById('employee-schedule-list').style.display = 'none';
+    document.getElementById('schedule-items-container').innerHTML = 
+        '<div class="text-muted text-center py-3">請選擇員工查看班表</div>';
+}
