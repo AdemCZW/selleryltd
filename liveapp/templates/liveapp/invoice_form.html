@@ -291,7 +291,7 @@
                         clonedDoc.head.appendChild(style);
 
                         // 將所有input的值轉為文字顯示
-                        clonedDoc.querySelectorAll('input[type="text"], input[type="date"], select').forEach(input => {
+                        clonedDoc.querySelectorAll('input[type="text"], input[type="date"]').forEach(input => {
                             const value = input.value || input.textContent || '';
                             if (value) {
                                 const span = clonedDoc.createElement('span');
@@ -305,6 +305,25 @@
                                 span.style.boxSizing = 'border-box';
                                 span.style.wordWrap = 'break-word';
                                 input.parentNode.replaceChild(span, input);
+                            }
+                        });
+
+                        // 特別處理select元素，顯示選中的文字而不是value
+                        clonedDoc.querySelectorAll('select').forEach(select => {
+                            const selectedOption = select.options[select.selectedIndex];
+                            const displayText = selectedOption ? selectedOption.textContent : '';
+                            if (displayText) {
+                                const span = clonedDoc.createElement('span');
+                                span.textContent = displayText;
+                                span.style.border = '1px solid #ccc';
+                                span.style.padding = '4px 6px';
+                                span.style.display = 'block';
+                                span.style.backgroundColor = '#fff';
+                                span.style.fontSize = '12px';
+                                span.style.width = '100%';
+                                span.style.boxSizing = 'border-box';
+                                span.style.wordWrap = 'break-word';
+                                select.parentNode.replaceChild(span, select);
                             }
                         });
                     }
@@ -345,17 +364,20 @@
                     billToInfo.textContent = 'Please select a company';
                 }
             }
-        } // Function to update heading and bank details when selection changes
+        }
+
+        // Function to update heading and bank details when selection changes
         function updateHeading() {
             const name = personSelect.options[personSelect.selectedIndex].text;
             const receiptNumberEl = document.querySelector('input[name="receipt_number"]');
             const receiptNumber = receiptNumberEl ? receiptNumberEl.value.trim() : '';
 
-            // 組合標題：人名 + Payment for: + Receipt Number
-            let headingText = 'Invoice_Payment for ' + name;
+            // 組合標題：Receipt Number + 人名
+            let headingText = 'Invoice_Payment_for';
             if (receiptNumber) {
-                headingText += '_ ' + receiptNumber;
+                headingText += ' ' + receiptNumber;
             }
+            headingText += '_ ' + name;
 
             heading.textContent = headingText;
             fillBankDetails();
