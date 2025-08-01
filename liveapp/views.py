@@ -7,7 +7,6 @@ from .models import Person, Invoice, Schedule, Brand, Company
 from .forms import PersonForm, InvoiceForm, InvoiceItemFormSet, ScheduleForm, BrandForm
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
-from django.template.loader import render_to_string
 import json
 from decimal import Decimal
 from .forms import ScheduleForm
@@ -441,58 +440,86 @@ def get_employee_schedule(request):
     return JsonResponse({'success': False, 'error': '僅支援 GET 請求'}, status=405)
 
 
-def invoice_pdf_view(request, invoice_id):
-    """生成發票的PDF預覽頁面"""
-    invoice = get_object_or_404(Invoice, id=invoice_id)
-    items = invoice.items.all()
+def timeline_view(request):
+    """時間軸視圖：顯示品牌分類的每日排班時間軸，支持lazy loading無限滾動"""
+    from datetime import date, timedelta
     
-    # 獲取人員銀行信息
-    person = invoice.person
+    # 獲取選定的日期，默認為今天
+    selected_date_str = request.GET.get('date', '')
+    if selected_date_str:
+        try:
+            selected_date = parse_date(selected_date_str)
+        except:
+            selected_date = date.today()
+    else:
+        selected_date = date.today()
+        selected_date_str = selected_date.strftime('%Y-%m-%d')
+    
+    # 生成24小時範圍 (0-23)
+    hours_range = list(range(24))
+    
+    # 獲取所有品牌（用於前端結構）
+    brands = Brand.objects.all().order_by('name')
+    
+    # 如果是AJAX請求，只返回指定日期的數據
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        schedules = Schedule.objects.filter(
+            date=selected_date
+        ).select_related('person', 'brand').order_by('start_time')
+        
+        schedule_list = []
+        for schedule in schedules:
+            schedule_list.append({
+                'id': schedule.id,
+                'person_name': schedule.person.name,
+                'role': schedule.role,
+                'start_time': schedule.start_time.strftime('%H:%M'),
+                'end_time': schedule.end_time.strftime('%H:%M'),
+                'duration': float(schedule.duration),
+                'brand_id': schedule.brand.id if schedule.brand else None,
+                'brand_name': schedule.brand.name if schedule.brand else '',
+                'room': schedule.room,
+                'modification_status': schedule.modification_status,
+            })
+        
+        return JsonResponse({
+            'schedules': schedule_list,
+            'date': selected_date_str,
+            'count': len(schedule_list)
+        })
+    
+    # 首次加載：只獲取當前日期的數據以提升性能
+    schedules = Schedule.objects.filter(
+        date=selected_date
+    ).select_related('person', 'brand').order_by('start_time')
+    
+    # 只為當前日期組織數據
+    schedules_by_date = {}
+    schedule_list = []
+    
+    for schedule in schedules:
+        schedule_data = {
+            'id': schedule.id,
+            'person_name': schedule.person.name,
+            'role': schedule.role,
+            'start_time': schedule.start_time.strftime('%H:%M'),
+            'end_time': schedule.end_time.strftime('%H:%M'),
+            'duration': float(schedule.duration),
+            'brand_id': schedule.brand.id if schedule.brand else None,
+            'brand_name': schedule.brand.name if schedule.brand else '',
+            'room': schedule.room,
+            'modification_status': schedule.modification_status,
+        }
+        schedule_list.append(schedule_data)
+    
+    schedules_by_date[selected_date_str] = schedule_list
     
     context = {
-        'invoice': invoice,
-        'items': items,
-        'person': person,
-        'total_amount': invoice.total_amount,
-        'is_pdf_view': True,  # 標記這是PDF預覽模式
+        'selected_date': selected_date_str,
+        'hours_range': hours_range,
+        'schedules_by_date': schedules_by_date,
+        'brands': brands,
+        'initial_load': True,  # 標記這是初始加載
     }
     
-    return render(request, 'liveapp/invoice_pdf_template.html', context)
-
-
-def invoice_pdf_data(request, invoice_id):
-    """提供發票的JSON數據用於前端PDF生成"""
-    invoice = get_object_or_404(Invoice, id=invoice_id)
-    items = invoice.items.all()
-    
-    # 準備發票數據
-    invoice_data = {
-        'id': invoice.id,
-        'receipt_number': invoice.receipt_number,
-        'date': invoice.date.strftime('%Y-%m-%d'),
-        'company': invoice.company,
-        'address': invoice.address,
-        'description': invoice.description,
-        'total_amount': str(invoice.total_amount),
-        'person': {
-            'name': invoice.person.name,
-            'bank': invoice.person.bank,
-            'bank_name': invoice.person.bank_name,
-            'account': invoice.person.account,
-            'sort_code': invoice.person.sort_code,
-        },
-        'items': [
-            {
-                'description': item.description,
-                'hours': str(item.hours),
-                'rate': str(item.rate),
-                'total_amount': str(item.total_amount),
-            }
-            for item in items
-        ]
-    }
-    
-    return JsonResponse({
-        'success': True,
-        'data': invoice_data
-    })
+    return render(request, 'liveapp/timeline_view.html', context)

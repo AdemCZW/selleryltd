@@ -1,0 +1,89 @@
+{% extends 'base.html' %} {% load static %} {% block title %}Timeline Schedule{% endblock %} {% block extra_head %}
+<link href="{% static 'liveapp/css/timeline_view.css' %}" rel="stylesheet">
+<style>
+    body {
+        padding-top: 56px;
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="timeline-container">
+    <!-- Header -->
+    <div class="timeline-header">
+        <div class="header-content">
+            <h2 class="timeline-title">Daily Schedule Timeline</h2>
+            <div class="date-selector">
+                <input type="date" id="timeline-date" class="form-control" value="{{ selected_date }}">
+            </div>
+            <!-- Time Period Legend moved inside menu bar -->
+            <div class="time-legend">
+                <span class="legend-title">時段顏色：</span>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-color morning-color"></div>
+                        <span>早上 (6:00-11:59)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color afternoon-color"></div>
+                        <span>下午 (12:00-17:59)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color evening-color"></div>
+                        <span>晚上 (18:00-21:59)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color night-color"></div>
+                        <span>深夜 (22:00-5:59)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time Period Legend -->
+        <div class="time-legend">
+            <span class="legend-title">時段顏色：</span>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color morning-color"></div>
+                    <span>早上 (6:00-11:59)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color afternoon-color"></div>
+                    <span>下午 (12:00-17:59)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color evening-color"></div>
+                    <span>晚上 (18:00-21:59)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color night-color"></div>
+                    <span>深夜 (22:00-5:59)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Content -->
+    <div class="timeline-content">
+        <!-- Scrollable Timeline Area -->
+        <div class="timeline-scroll-area">
+            <div class="timeline-grid">
+                <!-- Day rows will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="timeline-loading" class="loading-indicator" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p>Loading schedule data...</p>
+    </div>
+</div>
+
+<!-- Schedule data for JavaScript -->
+{{ schedules_by_date|json_script:"timeline-schedules-data" }}
+
+<script src="{% static 'liveapp/js/timeline_view.js' %}"></script>
+{% endblock %}

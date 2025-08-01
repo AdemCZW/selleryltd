@@ -472,6 +472,11 @@
                 manualOverride = true;
                 updateGrandTotal();
             });
+            // Always format subtotal to 2 decimal places on blur
+            total.addEventListener('blur', () => {
+                total.value = parseFloat(total.value || 0).toFixed(2);
+                updateGrandTotal();
+            });
 
             update();
         }
