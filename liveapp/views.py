@@ -295,6 +295,8 @@ def cancel_schedule(request):
             # parse late hours from request, default to 0
             late_hours = data.get('late_hours', 0)
             reason = data.get('reason')
+            # 新增：獲取選中的角色列表
+            selected_roles = data.get('selected_roles', [])  # ['anchor', 'operator']
 
             if not date_str or not room:
                 return JsonResponse({'success': False, 'error': '缺少日期或房間資訊'}, status=400)
@@ -314,35 +316,59 @@ def cancel_schedule(request):
             )
             is_late = timezone.now() > schedule_start_datetime
 
+            affected_count = 0
             for schedule in schedules_to_cancel:
                 person = schedule.person
                 
                 # 記錄修改狀態和時間
                 schedule.modified_at = timezone.now()
                 
+                # 檢查當前排班的角色是否在選中列表中
+                schedule_role = schedule.role.lower()
+                is_anchor = schedule_role in ['主播', 'anchor', 'streamer']
+                is_operator = schedule_role in ['運營', 'operator']
+                
+                # 判斷是否應該影響這個人
+                should_affect = False
+                if is_anchor and 'anchor' in selected_roles:
+                    should_affect = True
+                elif is_operator and 'operator' in selected_roles:
+                    should_affect = True
+                elif not selected_roles:  # 如果沒有選擇角色，默認影響所有人（向後兼容）
+                    should_affect = True
+                
                 if reason == 'late':
-                    person.late_count += 1
+                    if should_affect:
+                        person.late_count += 1
+                        # record late hours on schedule only for selected roles
+                        try:
+                            schedule.late_hours = Decimal(str(late_hours))
+                        except Exception:
+                            schedule.late_hours = Decimal('0')
+                        affected_count += 1
+                    
                     schedule.modification_status = 'late'
                     schedule.modification_reason = data.get('modification_reason', '遲到')
-                    # record late hours on schedule
-                    try:
-                        schedule.late_hours = Decimal(str(late_hours))
-                    except Exception:
-                        schedule.late_hours = Decimal('0')
+                    
                 elif reason == 'cancel':
-                    person.cancel_count += 1
+                    if should_affect:
+                        person.cancel_count += 1
+                        affected_count += 1
+                    
                     schedule.modification_status = 'cancelled'
                     schedule.modification_reason = data.get('modification_reason', '取消直播')
-                    
-                person.save()
+                
+                if should_affect:
+                    person.save()
 
-                # mark late cancellation flag
+                # mark late cancellation flag for all schedules in the room
                 if is_late:
                     schedule.is_late_cancellation = True
                 # save schedule changes
                 schedule.save()
 
-            return JsonResponse({'success': True, 'message': '操作成功'})
+            message = f'操作成功，影響了 {affected_count} 個人員'
+            return JsonResponse({'success': True, 'message': message, 'affected_count': affected_count})
         except json.JSONDecodeError:
             return JsonResponse({'success': False, 'error': '無效的請求格式'}, status=400)
         except Exception as e:
@@ -472,14 +498,21 @@ def timeline_view(request):
             schedule_list.append({
                 'id': schedule.id,
                 'person_name': schedule.person.name,
+                'person_nick_name': schedule.person.nick_name or '',
                 'role': schedule.role,
                 'start_time': schedule.start_time.strftime('%H:%M'),
                 'end_time': schedule.end_time.strftime('%H:%M'),
                 'duration': float(schedule.duration),
                 'brand_id': schedule.brand.id if schedule.brand else None,
                 'brand_name': schedule.brand.name if schedule.brand else '',
+                'brand_color': schedule.brand.color if schedule.brand else '#6c757d',
+                'brand_responsible': schedule.brand.responsible.name if schedule.brand and schedule.brand.responsible else '',
                 'room': schedule.room,
                 'modification_status': schedule.modification_status,
+                'modification_reason': schedule.modification_reason or '',
+                'is_late_cancellation': schedule.is_late_cancellation,
+                'late_hours': float(schedule.late_hours),
+                'modified_at': schedule.modified_at.strftime('%Y-%m-%d %H:%M') if schedule.modified_at else '',
             })
         
         return JsonResponse({
@@ -501,14 +534,21 @@ def timeline_view(request):
         schedule_data = {
             'id': schedule.id,
             'person_name': schedule.person.name,
+            'person_nick_name': schedule.person.nick_name or '',
             'role': schedule.role,
             'start_time': schedule.start_time.strftime('%H:%M'),
             'end_time': schedule.end_time.strftime('%H:%M'),
             'duration': float(schedule.duration),
             'brand_id': schedule.brand.id if schedule.brand else None,
             'brand_name': schedule.brand.name if schedule.brand else '',
+            'brand_color': schedule.brand.color if schedule.brand else '#6c757d',
+            'brand_responsible': schedule.brand.responsible.name if schedule.brand and schedule.brand.responsible else '',
             'room': schedule.room,
             'modification_status': schedule.modification_status,
+            'modification_reason': schedule.modification_reason or '',
+            'is_late_cancellation': schedule.is_late_cancellation,
+            'late_hours': float(schedule.late_hours),
+            'modified_at': schedule.modified_at.strftime('%Y-%m-%d %H:%M') if schedule.modified_at else '',
         }
         schedule_list.append(schedule_data)
     
@@ -523,3 +563,181 @@ def timeline_view(request):
     }
     
     return render(request, 'liveapp/timeline_view.html', context)
+
+
+@csrf_exempt
+def update_schedule_api(request):
+    """API端點：更新排班資料（用於拖拽功能）"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    
+    try:
+        # 解析JSON數據
+        data = json.loads(request.body)
+        
+        # 獲取必要的欄位
+        schedule_id = data.get('id')
+        room = data.get('room')
+        brand_name = data.get('brand_name')
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
+        is_merged_update = data.get('is_merged_update', False)
+        all_schedule_ids = data.get('all_schedule_ids', [])
+        
+        if not schedule_id and not (is_merged_update and all_schedule_ids):
+            return JsonResponse({'success': False, 'error': 'Schedule ID or merged schedule IDs are required'}, status=400)
+        
+        # 處理合併排班更新
+        if is_merged_update and all_schedule_ids:
+            print(f"DEBUG: Processing merged schedule update with IDs: {all_schedule_ids}")
+            print(f"DEBUG: ID types: {[type(id) for id in all_schedule_ids]}")
+            schedules_to_update = Schedule.objects.filter(id__in=all_schedule_ids)
+            print(f"DEBUG: Found {schedules_to_update.count()} schedules to update")
+            if not schedules_to_update.exists():
+                # 嘗試查找所有可能的排班來調試
+                all_schedules = Schedule.objects.all().values_list('id', flat=True)
+                print(f"DEBUG: Available schedule IDs: {list(all_schedules)[:10]}...")  # 只顯示前10個
+                return JsonResponse({'success': False, 'error': 'No schedules found for merged update'}, status=404)
+            
+            updated_schedules = []
+            for schedule in schedules_to_update:
+                # 更新每個排班
+                if room is not None:
+                    try:
+                        if isinstance(room, str):
+                            if room == '未分配房間':
+                                schedule.room = 0
+                            else:
+                                import re
+                                numbers = re.findall(r'\d+', str(room))
+                                if numbers:
+                                    schedule.room = int(numbers[0])
+                                else:
+                                    schedule.room = 0
+                        else:
+                            schedule.room = int(room)
+                    except (ValueError, TypeError):
+                        schedule.room = 0
+                
+                if brand_name:
+                    try:
+                        brand = Brand.objects.get(name=brand_name)
+                        schedule.brand = brand
+                    except Brand.DoesNotExist:
+                        pass
+                    except Brand.MultipleObjectsReturned:
+                        # 如果有多個同名品牌，取第一個
+                        brand = Brand.objects.filter(name=brand_name).first()
+                        if brand:
+                            schedule.brand = brand
+                
+                if start_time:
+                    try:
+                        schedule.start_time = parse_time(start_time)
+                    except ValueError:
+                        return JsonResponse({'success': False, 'error': 'Invalid start time format'}, status=400)
+                
+                if end_time:
+                    try:
+                        schedule.end_time = parse_time(end_time)
+                    except ValueError:
+                        return JsonResponse({'success': False, 'error': 'Invalid end time format'}, status=400)
+                
+                schedule.modified_at = timezone.now()
+                schedule.modification_status = 'modified'
+                schedule.save()
+                updated_schedules.append(schedule)
+            
+            # 返回合併更新結果
+            return JsonResponse({
+                'success': True,
+                'message': f'Updated {len(updated_schedules)} merged schedules successfully',
+                'data': {
+                    'updated_count': len(updated_schedules),
+                    'schedules': [{'id': s.id, 'person_name': s.person.name} for s in updated_schedules]
+                }
+            })
+        
+        # 單一排班更新（原有邏輯）
+        try:
+            schedule = Schedule.objects.get(id=schedule_id)
+        except Schedule.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Schedule not found'}, status=404)
+        
+        # 更新房間
+        if room is not None:
+            try:
+                # 嘗試轉換為整數，如果是文字則解析房間號碼
+                if isinstance(room, str):
+                    if room == '未分配房間':
+                        schedule.room = 0
+                    else:
+                        # 嘗試從字符串中提取數字
+                        import re
+                        numbers = re.findall(r'\d+', str(room))
+                        if numbers:
+                            schedule.room = int(numbers[0])
+                        else:
+                            schedule.room = 0
+                else:
+                    schedule.room = int(room)
+            except (ValueError, TypeError):
+                schedule.room = 0  # 默認值
+        
+        # 更新品牌
+        if brand_name:
+            try:
+                brand = Brand.objects.get(name=brand_name)
+                schedule.brand = brand
+            except Brand.DoesNotExist:
+                # 如果品牌不存在，可以選擇創建或忽略
+                pass
+            except Brand.MultipleObjectsReturned:
+                # 如果有多個同名品牌，取第一個
+                brand = Brand.objects.filter(name=brand_name).first()
+                if brand:
+                    schedule.brand = brand
+        
+        # 更新時間
+        if start_time:
+            try:
+                schedule.start_time = parse_time(start_time)
+            except ValueError:
+                return JsonResponse({'success': False, 'error': 'Invalid start time format'}, status=400)
+        
+        if end_time:
+            try:
+                schedule.end_time = parse_time(end_time)
+            except ValueError:
+                return JsonResponse({'success': False, 'error': 'Invalid end time format'}, status=400)
+        
+        # Duration會自動從start_time和end_time計算，不需要手動設置
+        # 因為duration是@property，會自動計算，無需賦值
+        
+        # 更新修改時間和狀態
+        schedule.modified_at = timezone.now()
+        schedule.modification_status = 'modified'  # 標記為已修改
+        
+        # 保存更改
+        schedule.save()
+        
+        # 返回成功回應
+        return JsonResponse({
+            'success': True,
+            'message': 'Schedule updated successfully',
+            'data': {
+                'id': schedule.id,
+                'person_name': schedule.person.name,
+                'room': schedule.room,
+                'brand_name': schedule.brand.name if schedule.brand else '',
+                'start_time': schedule.start_time.strftime('%H:%M'),
+                'end_time': schedule.end_time.strftime('%H:%M'),
+                'duration': float(schedule.duration),  # 使用@property計算的值
+                'modified_at': schedule.modified_at.strftime('%Y-%m-%d %H:%M:%S')
+            }
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

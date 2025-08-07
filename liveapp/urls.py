@@ -12,5 +12,6 @@ urlpatterns = [
     path('schedule/edit/<int:pk>/', views.schedule_edit, name='schedule_edit'),
     path('cancel-schedule/', views.cancel_schedule, name='cancel_schedule'),
     path('api/employee-schedule/', views.get_employee_schedule, name='get_employee_schedule'),
+    path('api/update-schedule/', views.update_schedule_api, name='update_schedule_api'),
     path('timeline/', views.timeline_view, name='timeline_view'),
 ]

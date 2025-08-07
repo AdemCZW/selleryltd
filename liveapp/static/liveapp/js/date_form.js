@@ -52,12 +52,14 @@ document.addEventListener("DOMContentLoaded", () => {
             const employeeScheduleBtn = document.getElementById("show-employee-schedule");
             const employeeScheduleClose = document.getElementById("employee-sidebar-close");
             const employeeScheduleSelect = document.getElementById("employee-schedule-select");
+            const timelineBtn = document.getElementById("show-timeline-view");
             const otherReasonContainer = document.getElementById(
                 "other-reason-container"
             );
             const otherReasonInput = document.getElementById("other-reason-input");
             const lateHoursContainer = document.getElementById("late-hours-container");
             const lateHoursInput = document.getElementById("late-hours-input");
+            const roleSelectionContainer = document.getElementById("role-selection-container");
 
             document.querySelectorAll('input[name="cancel-reason"]').forEach((radio) => {
                 radio.addEventListener("change", function() {
@@ -69,8 +71,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                     if (this.id === "reason-late" && this.checked) {
                         lateHoursContainer.style.display = "block";
+                        roleSelectionContainer.style.display = "block";
                     } else {
                         lateHoursContainer.style.display = "none";
+                        roleSelectionContainer.style.display = "none";
                     }
                 });
             });
@@ -87,46 +91,62 @@ document.addEventListener("DOMContentLoaded", () => {
             document
                 .getElementById("confirm-cancel-btn")
                 .addEventListener("click", function() {
-                    // Determine late hours if applicable
-                    let lateHours = 0;
-                    const date = document.getElementById("cancel-date-text").textContent;
-                    const room = document.querySelector("#cancel-schedule-details table")
-                        .dataset.room;
-                    const reasonRadio = document.querySelector(
-                        'input[name="cancel-reason"]:checked'
-                    );
-                    let reason = reasonRadio ? reasonRadio.value : "cancel";
-                    let otherReason = "";
-                    let modificationReason = document.getElementById("modification-reason-input").value.trim();
+                        // Determine late hours if applicable
+                        let lateHours = 0;
+                        const date = document.getElementById("cancel-date-text").textContent;
+                        const room = document.querySelector("#cancel-schedule-details table")
+                            .dataset.room;
+                        const reasonRadio = document.querySelector(
+                            'input[name="cancel-reason"]:checked'
+                        );
+                        let reason = reasonRadio ? reasonRadio.value : "cancel";
+                        let otherReason = "";
+                        let modificationReason = document.getElementById("modification-reason-input").value.trim();
 
-                    // If no notes are provided, use default reason
-                    if (!modificationReason) {
+                        // Get selected roles for late hours
+                        let selectedRoles = [];
                         if (reason === "late") {
-                            modificationReason = "Late";
-                        } else if (reason === "cancel") {
-                            modificationReason = "Live stream cancelled";
+                            const anchorChecked = document.getElementById("cancel-role-anchor").checked;
+                            const operatorChecked = document.getElementById("cancel-role-operator").checked;
+
+                            if (anchorChecked) selectedRoles.push("anchor");
+                            if (operatorChecked) selectedRoles.push("operator");
+
+                            // Validation: at least one role must be selected for late hours
+                            if (selectedRoles.length === 0) {
+                                showNotification("❌ Please select at least one role to apply late hours", "error");
+                                return;
+                            }
                         }
-                    }
 
-                    if (reason === "late") {
-                        const parsed = parseFloat(lateHoursInput.value);
-                        lateHours = isNaN(parsed) ? 0 : parsed;
-                    }
-
-                    if (reason === "other") {
-                        otherReason = document
-                            .getElementById("other-reason-input")
-                            .value.trim();
-                        if (!otherReason) {
-                            showNotification("❌ Please enter other reason", "error");
-                            return;
+                        // If no notes are provided, use default reason
+                        if (!modificationReason) {
+                            if (reason === "late") {
+                                modificationReason = "Late";
+                            } else if (reason === "cancel") {
+                                modificationReason = "Live stream cancelled";
+                            }
                         }
-                        modificationReason = otherReason; // If other reason, use the other reason as modification reason
-                    }
 
-                    if (
-                        confirm(
-                            `Are you sure you want to cancel the schedule for room ${room} on ${date} with reason "${reasonRadio.labels[0].textContent}"?`
+                        if (reason === "late") {
+                            const parsed = parseFloat(lateHoursInput.value);
+                            lateHours = isNaN(parsed) ? 0 : parsed;
+                        }
+
+                        if (reason === "other") {
+                            otherReason = document
+                                .getElementById("other-reason-input")
+                                .value.trim();
+                            if (!otherReason) {
+                                showNotification("❌ Please enter other reason", "error");
+                                return;
+                            }
+                            modificationReason = otherReason; // If other reason, use the other reason as modification reason
+                        }
+
+                        if (
+                            confirm(
+                                `Are you sure you want to cancel the schedule for room ${room} on ${date} with reason "${reasonRadio.labels[0].textContent}"?${selectedRoles.length > 0 ? `\nSelected roles: ${selectedRoles.join(', ')}` : ''}`
                         )
                     ) {
                         fetch("/cancel-schedule/", {
@@ -141,7 +161,8 @@ document.addEventListener("DOMContentLoaded", () => {
                                     reason: reason,
                                     other_reason: otherReason,
                                     late_hours: lateHours,
-                                    modification_reason: modificationReason
+                                    modification_reason: modificationReason,
+                                    selected_roles: selectedRoles  // 新增角色選擇
                                 }),
                             })
                             .then((response) => response.json())
@@ -427,68 +448,90 @@ document.addEventListener("DOMContentLoaded", () => {
                                 const td = document.createElement("td");
                                 // Group by room, display streamers & operations for each room
                                 {
-                                    const rooms = Array.from(new Set(list.map((s) => s.room))).sort(
-                                        (a, b) => a - b
-                                    );
+                                    // Group by room-time combinations instead of just rooms
+                                    const roomTimeGroups = {};
+                                    list.forEach((s) => {
+                                        const timeKey = `${s.start_time}-${s.end_time}`;
+                                        const groupKey = `${s.room}-${timeKey}`;
+                                        if (!roomTimeGroups[groupKey]) {
+                                            roomTimeGroups[groupKey] = {
+                                                room: s.room,
+                                                timeKey: timeKey,
+                                                schedules: []
+                                            };
+                                        }
+                                        roomTimeGroups[groupKey].schedules.push(s);
+                                    });
+                                    
+                                    // Sort groups by room first, then by time
+                                    const sortedGroups = Object.values(roomTimeGroups).sort((a, b) => {
+                                        if (a.room !== b.room) {
+                                            return a.room - b.room;
+                                        }
+                                        return a.timeKey.localeCompare(b.timeKey);
+                                    });
+                                    
                                     let html = "";
-                                    rooms.forEach((room) => {
+                                    sortedGroups.forEach((group) => {
+                                                const room = group.room;
+                                                const timeSlot = group.timeKey;
+                                                const groupSchedules = group.schedules;
+                                                
                                                 const anchors =
-                                                    list
-                                                    .filter((s) => (s.role === "Streamer" || s.role === "主播") && s.room === room)
+                                                    groupSchedules
+                                                    .filter((s) => (s.role === "Streamer" || s.role === "主播"))
                                                     .map((s) => `${s.person_name}`)
                                                     .join("<br>") || "None";
                                                 const ops =
-                                                    list
-                                                    .filter((s) => (s.role === "Operations" || s.role === "運營") && s.room === room)
+                                                    groupSchedules
+                                                    .filter((s) => (s.role === "Operations" || s.role === "運營"))
                                                     .map((s) => `${s.person_name}`)
                                                     .join("<br>") || "None";
 
                                                 // Get streamer's time as reference time
-                                                const anchorTimes = list.filter(
-                                                    (s) => (s.role === "Streamer" || s.role === "主播") && s.room === room
+                                                const anchorTimes = groupSchedules.filter(
+                                                    (s) => (s.role === "Streamer" || s.role === "主播")
                                                 );
-                                                const timeInfo =
-                                                    anchorTimes.length > 0 ?
-                                                    anchorTimes
-                                                    .map((s) => `${s.start_time}-${s.end_time}`)
-                                                    .join(", ") :
-                                                    "";
+                                                const timeInfo = timeSlot;
 
                                                 // Display time next to room number
-                                                const roomTitle = `Room ${room}${
-              timeInfo ? " (" + timeInfo + ")" : ""
-            }`;
+                                                const roomTitle = `Room ${room} (${timeInfo})`;
 
-                                                // Check if this room has any late cancellation schedules
-                                                const isLateCancelled = list.some(
-                                                    (s) => s.room === room && s.is_late_cancellation
-                                                );
-                                                // Check if schedule is completed (not cancelled and latest end time has passed)
-                                                const roomSchedules = list.filter((s) => s.room === room);
-                                                // Get current playing brand for this room
-                                                const brandName = roomSchedules.length > 0 ? roomSchedules[0].brand_name : '';
-                                                const brandColor = roomSchedules.length > 0 ? roomSchedules[0].brand_color : '';
-                                                // Determine the latest end_time for this room
-                                                const endTimes = roomSchedules.map((s) => s.end_time).filter(Boolean);
-                                                const latestEndTime = endTimes.length ?
-                                                    endTimes.reduce((a, b) => (a > b ? a : b)) :
-                                                    '';
-                                                const isCompleted = !isLateCancelled &&
-                                                    latestEndTime &&
-                                                    new Date(`${ds}T${latestEndTime}`) < new Date();
+                                                // Check for missing information and create warning messages
+                                                const warnings = [];
+                                                const hasAnchors = groupSchedules.some(s => s.role === "Streamer" || s.role === "主播");
+                                                const hasOperators = groupSchedules.some(s => s.role === "Operations" || s.role === "運營");
+                                                const hasBrand = groupSchedules.some(s => s.brand_name && s.brand_name.trim() !== '');
+                                                const hasTime = timeSlot && timeSlot !== '-';
+
+                                                if (!hasTime) warnings.push("⏰ 缺少時間資訊");
+                                                if (!hasAnchors) warnings.push("👤 缺少主播");
+                                                if (!hasOperators) warnings.push("⚙️ 缺少運營");
+                                                if (!hasBrand) warnings.push("🏷️ 缺少品牌");
+
+                                                const warningTitle = warnings.length > 0 ? warnings.join("\\n") : "";
+                                                
+                                                // Different warning colors based on severity
+                                                let warningColor = "#ff6b35"; // default orange
+                                                let warningAnimation = "warningPulse";
+                                                if (warnings.length >= 3) {
+                                                    warningColor = "#dc3545"; // red for high severity
+                                                    warningAnimation = "criticalWarningPulse";
+                                                } else if (warnings.length >= 2) {
+                                                    warningColor = "#fd7e14"; // darker orange for medium severity
+                                                }
+                                                
+                                                const warningIcon = warnings.length > 0 ? 
+                                                    `<span class="warning-alert" title="⚠️ 警告:\\n${warningTitle}" style="position:absolute;top:-8px;left:-8px;width:20px;height:20px;background:${warningColor};border:2px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:bold;z-index:15;cursor:help;animation:${warningAnimation} 2s infinite;">!</span>` : 
+                                                    "";
+
+                                                // Get current playing brand for this room-time group
+                                                const brandName = groupSchedules.length > 0 ? groupSchedules[0].brand_name : '';
+                                                const brandColor = groupSchedules.length > 0 ? groupSchedules[0].brand_color : '';
 
                                                 html += `
                                         <div class="room-schedule-block room-${room}" data-room="${room}" data-date="${ds}">
-                                            ${
-                                              isLateCancelled
-                                                ? '<span class="late-cancel-warning" title="此時段有延遲取消的紀錄">!</span>'
-                                                : ""
-                                            }
-                                            ${
-                                              isCompleted
-                                                ? '<span class="complete-check" title="此時段已完成">✔</span>'
-                                                : ""
-                                            }
+                                            ${warningIcon}
                                             <span class="close-btn" style="position:absolute;bottom:-8px;right:-8px;width:24px;height:24px;background-color:rgba(0,0,0,0.6);border:2px solid var(--tech-accent1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--tech-accent1);cursor:pointer;z-index:10;">&times;</span>
                                             <!-- Open cancel stream sidebar -->
                                             <div class="room-header">${roomTitle}</div>
@@ -602,7 +645,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (roomEl) {
                 roomEl.className = 'room-utilization-card';
                 if (roomsArray.length) {
-                    const headerHtml = '<div class="room-utilization-header">Room Utilization</div>';
+                    const headerHtml = '<div class="room-utilization-header">Weekly Room Utilization</div>';
                     const itemsHtml = '<div class="room-utilization-list">' + 
                         roomsArray.map(r => {
                             let usageClass = 'low-usage';
@@ -624,7 +667,79 @@ document.addEventListener("DOMContentLoaded", () => {
                         '</div>';
                     roomEl.innerHTML = headerHtml + itemsHtml;
                 } else {
-                    roomEl.innerHTML = '<div class="room-utilization-header">Room Utilization</div><div class="room-utilization-list"><div class="room-utilization-item no-rooms">No rooms scheduled</div></div>';
+                    roomEl.innerHTML = '<div class="room-utilization-header">Weekly Room Utilization</div><div class="room-utilization-list"><div class="room-utilization-item no-rooms">No rooms scheduled</div></div>';
+                }
+            }
+        })();
+
+        // Update 30-day room utilization display
+        (function update30DayRoomUtilization() {
+            // Calculate 30 days from current Monday
+            const thirtyDaysAgo = new Date(currentMonday);
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 23); // 30 days total (current week + 23 days back)
+            
+            const roomTimeMap30Day = {};
+            const workingHoursPerDay = 12;
+            const total30DayWorkingHours = 30 * workingHoursPerDay;
+            
+            // Generate all dates for the last 30 days
+            for (let i = 0; i < 30; i++) {
+                const checkDate = new Date(thirtyDaysAgo);
+                checkDate.setDate(thirtyDaysAgo.getDate() + i);
+                
+                const y = checkDate.getFullYear();
+                const m = String(checkDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(checkDate.getDate()).padStart(2, '0');
+                const ds = `${y}-${m}-${dd}`;
+                
+                const list = schedulesByDate[ds] || [];
+                
+                list.forEach((s) => {
+                    if (s.room) {
+                        // Count both English and Chinese roles for compatibility
+                        if (s.role === 'Streamer' || s.role === '主播') {
+                            if (!roomTimeMap30Day[s.room]) roomTimeMap30Day[s.room] = 0;
+                            roomTimeMap30Day[s.room] += s.duration || 0;
+                        }
+                    }
+                });
+            }
+            
+            // Convert to array and sort by utilization (highest first)
+            const rooms30DayArray = Object.keys(roomTimeMap30Day).map(room => ({
+                room: parseInt(room),
+                hours: roomTimeMap30Day[room],
+                percentage: Math.min(100, (roomTimeMap30Day[room] / total30DayWorkingHours * 100))
+            })).sort((a, b) => b.percentage - a.percentage);
+            
+            const room30DayEl = document.getElementById('room-utilization-30day');
+            if (room30DayEl) {
+                room30DayEl.className = 'room-utilization-card';
+                if (rooms30DayArray.length) {
+                    const headerHtml = '<div class="room-utilization-header">30-Day Room Utilization</div>';
+                    const itemsHtml = '<div class="room-utilization-list">' + 
+                        rooms30DayArray.map(r => {
+                            let usageClass = 'low-usage';
+                            if (r.percentage >= 80) usageClass = 'high-usage';
+                            else if (r.percentage >= 50) usageClass = 'medium-usage';
+                            
+                            return `<div class="room-utilization-item">
+                                <div class="room-info">
+                                    <span class="room-number">Room ${r.room}</span>
+                                    <small class="text-muted d-block">${r.hours.toFixed(1)}h total</small>
+                                </div>
+                                <div class="room-progress-container">
+                                    <div class="room-progress-bar">
+                                        <div class="room-progress-fill ${usageClass}" style="width: ${r.percentage}%"></div>
+                                    </div>
+                                </div>
+                                <div class="room-percentage">${r.percentage.toFixed(1)}%</div>
+                            </div>`;
+                        }).join('') + 
+                        '</div>';
+                    room30DayEl.innerHTML = headerHtml + itemsHtml;
+                } else {
+                    room30DayEl.innerHTML = '<div class="room-utilization-header">30-Day Room Utilization</div><div class="room-utilization-list"><div class="room-utilization-item no-rooms">No rooms scheduled in last 30 days</div></div>';
                 }
             }
         })();
@@ -638,6 +753,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const roomBlock = this.closest(".room-schedule-block");
                 const date = roomBlock.dataset.date;
                 const room = roomBlock.dataset.room;
+                const timeSlot = roomBlock.dataset.timeSlot;
                 document.getElementById("cancel-date-text").textContent = date;
 
                 const scheduleDetailsContainer = document.getElementById(
@@ -646,7 +762,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 scheduleDetailsContainer.innerHTML = ""; // 清空舊內容
 
                 let schedules = schedulesByDate[date] || [];
-                let roomSchedules = schedules.filter((s) => s.room == room);
+                let roomSchedules = schedules.filter((s) => {
+                    const matchesRoom = s.room == room;
+                    const matchesTimeSlot = timeSlot ? `${s.start_time}-${s.end_time}` === timeSlot : true;
+                    return matchesRoom && matchesTimeSlot;
+                });
 
                 const personSelectContainer = document.getElementById("person-select-container");
                 const personSelect = document.getElementById("cancel-person-select");
@@ -654,9 +774,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (roomSchedules.length > 0) {
                     const table = document.createElement("table");
                     table.className = "table table-dark table-striped";
-                    table.dataset.room = room; // 將 room 存儲在 table 的 dataset 中
+                    table.dataset.room = room;
+                    table.dataset.timeSlot = timeSlot || '';
+                    
+                    // 創建標題，包含房間和時間段信息
+                    const headerTitle = timeSlot ? `房間 ${room} - ${timeSlot}` : `房間 ${room}`;
+                    
                     table.innerHTML = `
                                     <thead>
+                                        <tr class="table-info">
+                                            <th colspan="4" class="text-center">${headerTitle}</th>
+                                        </tr>
                                         <tr>
                                             <th>員工</th>
                                             <th>類型</th>
@@ -822,6 +950,45 @@ document.addEventListener("DOMContentLoaded", () => {
                 clearEmployeeScheduleData();
             }
         });
+    }
+
+    // Timeline button functionality
+    if (timelineBtn) {
+        console.log('Timeline button found, adding event listener');
+        timelineBtn.addEventListener('click', function(e) {
+            console.log('Timeline button clicked');
+            e.preventDefault(); // 防止預設行為
+            
+            // Get current selected date from various sources
+            let targetDate = '';
+            
+            // First try to get from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const dateParam = urlParams.get('date');
+            if (dateParam) {
+                targetDate = dateParam;
+                console.log('Got date from URL:', targetDate);
+            } else {
+                // Try to get from selected date element
+                const selectedDateElement = document.getElementById('selected-date');
+                if (selectedDateElement && selectedDateElement.textContent.trim()) {
+                    targetDate = selectedDateElement.textContent.trim();
+                    console.log('Got date from selected element:', targetDate);
+                } else {
+                    // Use today's date as fallback
+                    const today = new Date();
+                    targetDate = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+                    console.log('Using today date as fallback:', targetDate);
+                }
+            }
+            
+            // Navigate to timeline view with selected date
+            const timelineUrl = `/timeline/?date=${encodeURIComponent(targetDate)}`;
+            console.log('Navigating to:', timelineUrl);
+            window.location.href = timelineUrl;
+        });
+    } else {
+        console.log('Timeline button not found');
     }
 }); // end DOMContentLoaded listener
 

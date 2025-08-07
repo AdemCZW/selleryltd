@@ -28,13 +28,15 @@ body {
     color: var(--text-color) !important;
     min-height: 100vh;
     line-height: 1.6;
-    padding-top: 120px;
+    padding-top: 80px;
 }
 
 .calendar-container {
-    max-width: 1920px;
-    margin: 40px auto;
-    padding: 0 24px;
+    width: 100%;
+    max-width: 100%;
+    margin: 15px 0;
+    padding: 0;
+    overflow-x: auto;
 }
 
 
@@ -45,9 +47,9 @@ body {
 #selected-date-section .card {
     background-color: var(--card-bg-color) !important;
     border: 1px solid var(--border-color) !important;
-    border-radius: 12px !important;
+    border-radius: 8px !important;
     box-shadow: var(--shadow) !important;
-    padding: 24px;
+    padding: 12px;
     transition: box-shadow 0.3s ease;
 }
 
@@ -122,7 +124,7 @@ body {
     box-shadow: 0 4px 20px rgba(0, 123, 255, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
     cursor: pointer;
     pointer-events: auto;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -130,17 +132,19 @@ body {
     -webkit-backdrop-filter: blur(10px);
     z-index: 9998;
     overflow: hidden;
+    will-change: transform, box-shadow;
 }
 
 .fixed-nav-btn:hover {
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover-color) 100%);
     border-color: var(--primary-hover-color);
-    box-shadow: 0 8px 30px rgba(0, 123, 255, 0.25), 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 25px rgba(0, 123, 255, 0.3), 0 4px 15px rgba(0, 0, 0, 0.1);
     transform: translateY(-50%) scale(1.05);
 }
 
 .fixed-nav-btn:active {
-    transform: translateY(-50%) scale(0.95);
+    transform: translateY(-50%) scale(0.98);
+    transition: all 0.1s ease;
 }
 
 .fixed-nav-left {
@@ -177,10 +181,11 @@ body {
     font-size: 20px;
     font-weight: 700;
     color: white;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     line-height: 1;
     user-select: none;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    will-change: transform;
 }
 
 .fixed-nav-btn:hover .nav-arrow {
@@ -190,7 +195,7 @@ body {
 }
 
 
-/* Add ripple effect */
+/* Optimized ripple effect */
 
 .fixed-nav-btn::before {
     content: '';
@@ -202,29 +207,34 @@ body {
     border-radius: 50%;
     background: rgba(0, 123, 255, 0.3);
     transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
+    transition: width 0.4s ease-out, height 0.4s ease-out;
+    pointer-events: none;
 }
 
 .fixed-nav-btn:active::before {
-    width: 300px;
-    height: 300px;
+    width: 120px;
+    height: 120px;
+    transition: width 0.3s ease-out, height 0.3s ease-out;
 }
 
 
-/* Subtle breathing animation for navigation arrows */
+/* Optimized subtle animation for navigation arrows */
 
 @keyframes breathe {
     0%,
     100% {
-        box-shadow: 0 8px 25px rgba(0, 123, 255, 0.15);
+        transform: translateY(-50%) scale(1);
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2);
     }
     50% {
-        box-shadow: 0 8px 25px rgba(0, 123, 255, 0.25);
+        transform: translateY(-50%) scale(1.02);
+        box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
     }
 }
 
 .fixed-nav-btn {
-    animation: breathe 3s ease-in-out infinite;
+    animation: breathe 4s ease-in-out infinite;
+    will-change: transform, box-shadow;
 }
 
 .fixed-nav-btn:hover {
@@ -275,30 +285,32 @@ body {
 
 .fixed-week-display {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: 15px;
+    right: 15px;
     transform: none;
     z-index: 9999;
     pointer-events: auto;
 }
 
 .week-range-container {
-    background: linear-gradient(135deg, var(--card-bg-color), rgba(248, 249, 250, 0.95));
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 249, 250, 0.95));
     border: 2px solid var(--primary-color);
-    border-radius: 20px;
-    padding: 12px 24px;
-    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.15);
+    border-radius: 12px;
+    padding: 6px 12px;
+    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.15);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
     position: relative;
     overflow: hidden;
+    min-width: 180px;
+    will-change: transform, box-shadow;
 }
 
 .week-range-container:hover {
     background: linear-gradient(135deg, var(--primary-color), var(--primary-hover-color));
     box-shadow: 0 12px 35px rgba(0, 123, 255, 0.25);
-    transform: translateY(-2px);
+    transform: translateY(-3px);
 }
 
 .week-range-container:hover #week-range {
@@ -307,18 +319,20 @@ body {
 }
 
 #week-range {
-    font-size: 1.2rem;
-    font-weight: 700;
+    font-size: 0.85rem;
+    font-weight: 600;
     color: var(--primary-color);
     text-align: center;
-    transition: all 0.3s ease;
-    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+    letter-spacing: 0.2px;
     white-space: nowrap;
     user-select: none;
+    font-family: 'Roboto', sans-serif;
+    will-change: color;
 }
 
 
-/* Add subtle glow animation */
+/* Optimized glow animation for week display */
 
 @keyframes weekGlow {
     0%,
@@ -326,12 +340,13 @@ body {
         box-shadow: 0 8px 25px rgba(0, 123, 255, 0.15);
     }
     50% {
-        box-shadow: 0 8px 25px rgba(0, 123, 255, 0.25);
+        box-shadow: 0 10px 30px rgba(0, 123, 255, 0.25);
     }
 }
 
 .week-range-container {
-    animation: weekGlow 4s ease-in-out infinite;
+    animation: weekGlow 5s ease-in-out infinite;
+    will-change: box-shadow;
 }
 
 .week-range-container:hover {
@@ -381,18 +396,22 @@ body {
 #calendar-table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 4px;
+    border-spacing: 3px;
 }
 
 #calendar-table thead th {
-    background: none !important;
-    color: var(--muted-text-color) !important;
-    border: none !important;
-    padding: 12px 8px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    color: var(--primary-color) !important;
+    border: 2px solid var(--primary-color) !important;
+    border-radius: 8px !important;
+    padding: 8px 4px;
     text-align: center;
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 0.75rem;
     text-transform: uppercase;
-    font-size: 0.8rem;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+    transition: all 0.3s ease;
 }
 
 #calendar-table tbody td {
@@ -417,9 +436,32 @@ body {
     background: transparent;
     color: var(--text-color);
     font-weight: 600;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     cursor: pointer;
     border: 2px solid transparent;
+    will-change: transform, background-color;
+}
+
+.calendar-day-span::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.5s ease;
+}
+
+.calendar-day-span:hover::before {
+    left: 100%;
+}
+
+.calendar-day-span:hover {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-color: var(--primary-color);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2);
 }
 
 .calendar-day-span:hover {
@@ -447,116 +489,243 @@ body {
 }
 
 
+/* Statistics Cards Container */
+
+.stats-container {
+    width: 100%;
+    margin: 15px 0;
+    padding: 0;
+}
+
+.stats-cards-wrapper {
+    display: flex;
+    gap: 16px;
+    width: 100%;
+    align-items: stretch;
+    /* GPU 加速優化 */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000;
+}
+
+
+/* 優化動畫性能 - GPU 加速 */
+.brand-hours-card,
+.room-utilization-card,
+.brand-hours-item,
+.room-utilization-item,
+.room-progress-fill {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* 減少不必要的重繪 */
+.brand-hours-card::before,
+.room-utilization-card::before,
+.room-progress-fill::after {
+    backface-visibility: hidden;
+    transform: translateZ(0);
+}
+
+
 /* Brand Hours */
 
 .brand-hours-card {
-    background: var(--card-bg-color);
-    border-radius: 8px;
-    box-shadow: var(--shadow);
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     padding: 12px 16px;
-    border: 1px solid var(--border-color);
+    border: 1px solid #e9ecef;
     margin: 0;
-    min-width: 200px;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    color: #495057;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s ease-out;
+    will-change: transform;
+}
+
+.brand-hours-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border-color: #007bff;
+}
+
+.brand-hours-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+    transition: left 0.4s ease-out;
+    will-change: left;
+}
+
+.brand-hours-card:hover::before {
+    left: 100%;
 }
 
 .brand-hours-card .brand-hours-header {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--muted-text-color);
+    font-weight: 700;
+    color: #6c757d;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 10px;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+    position: relative;
 }
 
 .brand-hours-card .brand-hours-header:before {
-    content: '\f201';
-    font-family: 'Font Awesome 5 Free';
-    font-weight: 900;
-    color: var(--primary-color);
-    font-size: 1rem;
+    content: '📊';
+    font-size: 1.2rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .brand-hours-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .brand-hours-item {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: space-between;
+    gap: 12px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
     border-radius: 6px;
     padding: 4px 8px;
     font-size: 0.75rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
+    font-weight: 600;
+    color: #495057;
+    transition: transform 0.2s ease-out, background-color 0.2s ease-out, border-color 0.2s ease-out, color 0.2s ease-out;
+    will-change: transform;
 }
 
 .brand-hours-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateY(-1px);
+    background: #e9ecef;
+    transform: translateX(2px);
+    border-color: #007bff;
+    color: #007bff;
 }
 
 .brand-hours-item .brand-icon {
-    font-size: 0.7rem;
-    opacity: 0.8;
-}
-
-.brand-hours-item .brand-name {
-    font-weight: 600;
-}
-
-.brand-hours-item .brand-hours-value {
-    font-weight: 700;
+    font-size: 0.8rem;
     opacity: 0.9;
 }
 
+.brand-hours-item .brand-name {
+    font-weight: 700;
+    flex: 1;
+}
+
+.brand-hours-item .brand-hours-value {
+    font-weight: 900;
+    font-size: 0.9rem;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
 .brand-hours-item.no-brands {
-    color: var(--muted-text-color);
+    color: #6c757d;
     font-style: italic;
+    justify-content: center;
 }
 
 
 /* Room Utilization */
 
 .room-utilization-card {
-    background: var(--card-bg-color);
-    border-radius: 8px;
-    box-shadow: var(--shadow);
+    background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(255, 126, 95, 0.25);
     padding: 12px 16px;
-    border: 1px solid var(--border-color);
+    border: none;
     margin: 0;
-    min-width: 220px;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    color: white;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    will-change: transform;
+}
+
+.room-utilization-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 126, 95, 0.35);
+}
+
+.room-utilization-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+    transition: left 0.4s ease-out;
+    will-change: left;
+}
+
+.room-utilization-card:hover::before {
+    left: 100%;
 }
 
 .room-utilization-card .room-utilization-header {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--muted-text-color);
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.95);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 10px;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
 }
 
 .room-utilization-card .room-utilization-header:before {
-    content: '📊';
-    font-size: 1rem;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+    content: '🏠';
+    font-size: 1.2rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .room-utilization-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
+    max-height: 330px;
+    overflow-y: auto;
+    /* 優化滾動性能 */
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+/* Webkit 滾動條樣式優化 */
+.room-utilization-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.room-utilization-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+}
+
+.room-utilization-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+.room-utilization-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
 }
 
 .room-utilization-item {
@@ -565,75 +734,120 @@ body {
     justify-content: space-between;
     padding: 6px 0;
     font-size: 0.75rem;
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease-out, padding-left 0.2s ease-out;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    will-change: transform;
 }
 
 .room-utilization-item:hover {
-    transform: translateX(2px);
+    transform: translateX(4px);
+    padding-left: 6px;
+}
+
+.room-utilization-item:last-child {
+    border-bottom: none;
 }
 
 .room-info {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
     min-width: 80px;
 }
 
 .room-number {
-    font-weight: 700;
-    color: var(--primary-color);
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.95);
     font-size: 0.8rem;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .room-progress-container {
     flex: 1;
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin: 0 8px;
+    gap: 12px;
+    margin: 0 12px;
 }
 
 .room-progress-bar {
     flex: 1;
     height: 6px;
-    background-color: var(--border-color);
+    background-color: rgba(255, 255, 255, 0.3);
     border-radius: 3px;
     overflow: hidden;
     position: relative;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .room-progress-fill {
     height: 100%;
     background: linear-gradient(90deg, var(--success-color), var(--primary-color));
     border-radius: 3px;
-    transition: width 0.8s ease;
+    transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     position: relative;
+    will-change: width;
+}
+
+.room-progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -30%;
+    width: 30%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: shimmerOptimized 3s infinite;
+    will-change: left;
+}
+
+@keyframes shimmerOptimized {
+    0% {
+        left: -30%;
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        left: 100%;
+        opacity: 0;
+    }
 }
 
 .room-progress-fill.high-usage {
-    background: linear-gradient(90deg, var(--warning-color), var(--danger-color));
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(255, 200, 200, 0.9));
 }
 
 .room-progress-fill.medium-usage {
-    background: linear-gradient(90deg, var(--primary-color), var(--warning-color));
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.8), rgba(255, 230, 180, 0.9));
 }
 
 .room-progress-fill.low-usage {
-    background: linear-gradient(90deg, var(--success-color), var(--primary-color));
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.8), rgba(200, 255, 200, 0.9));
 }
 
 .room-percentage {
-    font-weight: 700;
-    color: var(--text-color);
-    min-width: 35px;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.95);
+    min-width: 40px;
     text-align: right;
     font-size: 0.75rem;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 1px 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .room-utilization-item.no-rooms {
-    color: var(--muted-text-color);
+    color: rgba(255, 255, 255, 0.8);
     font-style: italic;
     justify-content: center;
+    border-bottom: none;
 }
 
 
@@ -782,12 +996,15 @@ a.text-danger:hover {
 #weekly-summary {
     border-collapse: separate;
     border-spacing: 4px;
+    width: 100%;
+    table-layout: fixed;
 }
 
 #weekly-summary td {
     padding: 0;
     vertical-align: top;
-    min-width: 180px;
+    width: calc((100% - 24px) / 7);
+    /* 7 columns with 4px spacing */
 }
 
 .room-schedule-block {
@@ -796,14 +1013,14 @@ a.text-danger:hover {
     border-radius: 12px;
     padding: 8px 8px 16px 8px;
     margin-bottom: 8px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     animation: none !important;
     /* Remove breathing animation */
     width: 100%;
-    min-width: 180px;
     box-sizing: border-box;
     position: relative;
     /* For status icons */
+    will-change: border-color, box-shadow;
 }
 
 .room-schedule-block:hover {
@@ -965,32 +1182,57 @@ a.text-danger:hover {
 }
 
 
-/* Status Icons (Late Cancel & Completed) */
+/* Status Icons (Warning Alert) */
 
-.late-cancel-warning,
-.complete-check {
+.warning-alert {
     position: absolute;
-    top: -10px;
-    left: -10px;
-    width: 24px;
-    height: 24px;
+    top: -8px;
+    left: -8px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     font-weight: bold;
-    font-size: 14px;
-    z-index: 10;
+    font-size: 12px;
+    z-index: 15;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border: 2px solid white;
+    animation: warningPulse 3s ease-in-out infinite;
+    cursor: help;
+    will-change: transform, box-shadow;
 }
 
-.late-cancel-warning {
-    background-color: var(--danger-color);
+
+/* Optimized warning alert animation */
+
+@keyframes warningPulse {
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.7);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 4px rgba(255, 107, 53, 0);
+    }
 }
 
-.complete-check {
-    background-color: var(--success-color);
+
+/* Optimized high severity warning animation */
+
+@keyframes criticalWarningPulse {
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+    50% {
+        transform: scale(1.08);
+        box-shadow: 0 0 0 6px rgba(220, 53, 69, 0);
+    }
 }
 
 
@@ -1050,21 +1292,79 @@ a.text-danger:hover {
 }
 
 
+/* Fixed Timeline Button */
+
+#show-timeline-view {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    border: none;
+    color: white;
+    position: fixed;
+    bottom: 30px;
+    left: 160px;
+    z-index: 1000;
+    border-radius: 50px;
+    width: 120px;
+    height: 50px;
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    will-change: transform, box-shadow;
+}
+
+#show-timeline-view:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(23, 162, 184, 0.4);
+    background: linear-gradient(135deg, #138496 0%, #0f6674 100%);
+    border-color: transparent;
+    color: white;
+}
+
+#show-timeline-view:active {
+    transform: translateY(-1px);
+    transition: all 0.1s ease;
+}
+
+#show-timeline-view i {
+    font-size: 16px;
+    transition: transform 0.2s ease;
+}
+
+#show-timeline-view:hover i {
+    transform: scale(1.1);
+}
+
+
 /* Responsive Adjustments */
+
+@media (max-width: 1920px) {
+    .calendar-container {
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+    }
+    #weekly-summary td {
+        width: calc((100% - 24px) / 7);
+    }
+}
 
 @media (max-width: 768px) {
     body {
         padding-top: 110px;
     }
     .calendar-container {
-        margin: 24px auto;
-        padding: 0 16px;
+        margin: 24px 0;
+        padding: 0;
     }
     #weekly-summary td {
-        min-width: 150px;
+        width: calc((100% - 12px) / 7);
     }
     .room-schedule-block {
-        min-width: 150px;
+        min-width: unset;
     }
     .table th,
     .table td {
@@ -1072,14 +1372,26 @@ a.text-danger:hover {
         font-size: 0.85rem !important;
     }
     /* Stack brand hours and room utilization cards vertically on mobile */
-    .d-flex.gap-3 {
+    .stats-cards-wrapper {
         flex-direction: column !important;
-        gap: 1rem !important;
+        gap: 16px !important;
     }
     .brand-hours-card,
     .room-utilization-card {
         min-width: unset;
         width: 100%;
+        flex: none;
+        padding: 10px 14px;
+    }
+    .room-utilization-list {
+        max-height: 150px;
+    }
+    /* Adjust timeline button position for mobile */
+    #show-timeline-view {
+        left: 130px !important;
+        width: 100px !important;
+        height: 45px !important;
+        font-size: 12px !important;
     }
     /* Adjust fixed navigation arrows for mobile */
     .fixed-nav-btn {
@@ -1130,6 +1442,14 @@ a.text-danger:hover {
     }
     .nav-arrow {
         font-size: 18px;
+    }
+    /* Adjust timeline button for very small screens */
+    #show-timeline-view {
+        left: 110px !important;
+        width: 85px !important;
+        height: 40px !important;
+        font-size: 11px !important;
+        bottom: 15px !important;
     }
     /* Further adjust week display for very small screens */
     .fixed-week-display {

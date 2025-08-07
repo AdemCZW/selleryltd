@@ -1,12 +1,13 @@
 {% extends 'base.html' %} {% load static %} {% block title %}Timeline Schedule{% endblock %} {% block extra_head %}
 <link href="{% static 'liveapp/css/timeline_view.css' %}" rel="stylesheet">
+<meta name="csrf-token" content="{{ csrf_token }}">
 <style>
     body {
         padding-top: 56px;
         background-color: #f8f9fa;
     }
 </style>
-{% endblock %} {% block content %}
+{% endblock %} {% block content %} {% csrf_token %}
 <div class="timeline-container">
     <!-- Header -->
     <div class="timeline-header">
@@ -14,6 +15,12 @@
             <h2 class="timeline-title">Daily Schedule Timeline</h2>
             <div class="date-selector">
                 <input type="date" id="timeline-date" class="form-control" value="{{ selected_date }}">
+            </div>
+            <!-- Back to Calendar Button -->
+            <div class="back-button-container">
+                <a href="/date-form/" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>返回日曆
+                </a>
             </div>
             <!-- Time Period Legend moved inside menu bar -->
             <div class="time-legend">
@@ -85,5 +92,12 @@
 <!-- Schedule data for JavaScript -->
 {{ schedules_by_date|json_script:"timeline-schedules-data" }}
 
+<!-- Common utilities (load first) -->
+<script src="{% static 'liveapp/js/common/config.js' %}"></script>
+<script src="{% static 'liveapp/js/common/utils.js' %}"></script>
+<script src="{% static 'liveapp/js/common/notifications.js' %}"></script>
+<script src="{% static 'liveapp/js/common/api.js' %}"></script>
+
+<!-- Page specific JS -->
 <script src="{% static 'liveapp/js/timeline_view.js' %}"></script>
 {% endblock %}

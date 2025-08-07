@@ -11,7 +11,10 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
-import dj_database_url
+try:
+    import dj_database_url
+except ImportError:
+    dj_database_url = None
 import os
 
 # 專案根目錄
@@ -42,9 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'liveapp',
-    'reportlab',  # 如果需要使用 ReportLab 生成 PDF
-
-
+    # 'reportlab',  # 註釋掉，如果需要使用 ReportLab 生成 PDF，請先安裝
 ]
 
 MIDDLEWARE = [
@@ -86,7 +87,7 @@ WSGI_APPLICATION = 'selleryltd.wsgi.application'
 
 # Database configuration: use DATABASE_URL for production, fallback to SQLite locally
 DATABASE_URL = os.environ.get('DATABASE_URL')
-if DATABASE_URL:
+if DATABASE_URL and dj_database_url:
     # 在生產環境中使用提供的 DATABASE_URL
     DATABASES = {
         'default': dj_database_url.config(
@@ -95,7 +96,7 @@ if DATABASE_URL:
             ssl_require=True
         )
     }
-elif os.environ.get('RAILWAY_ENVIRONMENT'):
+elif os.environ.get('RAILWAY_ENVIRONMENT') and dj_database_url:
     # 如果在 Railway 環境但沒有 DATABASE_URL，使用預設連接
     DATABASES = {
         'default': dj_database_url.config(
