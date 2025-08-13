@@ -1,4 +1,4 @@
-{% extends 'base.html' %} {% load static %} {% block title %}Date Form{% endblock %} {% block extra_head %}
+{% extends 'base.html' %} {% load static %} {% load employee_filters %} {% block title %}Date Form{% endblock %} {% block extra_head %}
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <link href="{% static 'liveapp/css/date_form.css' %}" rel="stylesheet">
 <style>
@@ -147,8 +147,12 @@
                                 <label for="employee-select" class="form-label">Select Employee</label>
                                 <select id="employee-select" class="form-select mb-3">
                             <option value="">Please select employee</option>
-                            {% for person in persons %}
-                            <option value="{{ person.id }}">{{ person.name }}</option>
+                            {% for letter, employees in persons|group_employees_alphabetically %}
+                                <optgroup label="── {{ letter }} ──">
+                                    {% for person in employees %}
+                                    <option value="{{ person.id }}">{{ person.name }}</option>
+                                    {% endfor %}
+                                </optgroup>
                             {% endfor %}
                         </select>
                                 <label class="form-label">Select Role</label>
@@ -411,8 +415,12 @@
                     <h6 id="selected-employee-name" style="color:#007bff;font-weight:600;margin-bottom:8px;">Please Select Employee</h6>
                     <select id="employee-schedule-select" class="form-select mb-3">
                         <option value="">Select employee to view schedule</option>
-                        {% for person in persons %}
-                        <option value="{{ person.id }}">{{ person.name }}</option>
+                        {% for letter, employees in persons|group_employees_alphabetically %}
+                            <optgroup label="── {{ letter }} ──">
+                                {% for person in employees %}
+                                <option value="{{ person.id }}">{{ person.name }}</option>
+                                {% endfor %}
+                            </optgroup>
                         {% endfor %}
                     </select>
                 </div>

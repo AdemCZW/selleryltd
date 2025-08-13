@@ -90,7 +90,7 @@ def invoice_create(request):
         formset = InvoiceItemFormSet()
     # include all persons for bank details lookup
     # prepare person choices and selected bank info
-    persons = Person.objects.all()
+    persons = Person.objects.all().order_by('name')  # 按姓名排序
     companies = Company.objects.all()
     
     # prepare JSON data for frontend bank info lookup
@@ -127,7 +127,7 @@ def invoice_create(request):
 
 
 def calendar(request):
-    persons = Person.objects.all()
+    persons = Person.objects.all().order_by('name')  # 按姓名排序
     selected_date = request.GET.get('date')
     if selected_date:
         try:

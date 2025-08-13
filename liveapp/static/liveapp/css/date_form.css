@@ -17,6 +17,23 @@
     --font-main: 'Microsoft JhengHei', sans-serif;
 }
 
+/* Employee dropdown alphabetical grouping */
+select optgroup {
+    font-weight: bold;
+    color: #6c757d;
+    font-size: 0.9em;
+    margin-top: 0.3em;
+    background: #f8f9fa;
+    font-style: italic;
+}
+
+select optgroup option {
+    padding-left: 1.2em;
+    font-weight: normal;
+    font-style: normal;
+    color: #212529;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 * {
     font-family: var(--font-main) !important;
