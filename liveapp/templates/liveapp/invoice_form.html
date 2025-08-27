@@ -1,4 +1,4 @@
-{% extends 'base.html' %} {% load employee_filters %} {% block title %}新增發票{% endblock %} {% block content %} {% csrf_token %}
+{% extends 'base.html' %} {% block title %}新增發票{% endblock %} {% block content %} {% csrf_token %}
 <div class="container mt-4">
     <div id="invoice-content">
         <h1 class="mb-4">Invoice_Payment for </h1>
@@ -15,9 +15,9 @@
                 <div class="col-md-4 mb-3">
                     {{ form.person.label_tag }}
                     <select id="id_person" name="person" class="form-control" required>
-                            {% for letter, employees in persons|group_employees_alphabetically %}
-                                <optgroup label="── {{ letter }} ──">
-                                    {% for p in employees %}
+                            {% for letter, persons_list in persons_by_letter.items %}
+                                <optgroup label="=== {{ letter }} ===">
+                                    {% for p in persons_list %}
                                         <option value="{{ p.id }}" 
                                             data-bank="{{ p.bank }}" 
                                             data-bank-name="{{ p.bank_name }}" 

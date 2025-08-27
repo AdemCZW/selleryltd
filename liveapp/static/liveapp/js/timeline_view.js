@@ -870,12 +870,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                 isRealConflict = true;
                                 console.log('Person conflict detected:', schedule1.person_name, 'scheduled multiple times');
                             }
-                            // Check if same role (multiple anchors or multiple operators in same time slot)
+                            // Check if same role (multiple streamers or multiple operators in same time slot)
                             else if (schedule1.role === schedule2.role) {
                                 isRealConflict = true;
                                 console.log('Role conflict detected:', schedule1.role, 'multiple people in same role');
                             }
-                            // Different roles (anchor + operator) in same room-brand is normal, not a conflict
+                            // Different roles (streamer + operator) in same room-brand is normal, not a conflict
                             else {
                                 console.log('Normal pairing detected:', schedule1.person_name, '(', schedule1.role, ') +', schedule2.person_name, '(', schedule2.role, ')');
                             }
@@ -1063,7 +1063,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const schedules = group.schedules;
 
                 // Separate by role
-                const anchors = schedules.filter(s => s.role === '主播' || s.role === 'anchor');
+                const streamers = schedules.filter(s => s.role === '主播' || s.role === 'streamer');
                 const operators = schedules.filter(s => s.role === '運營' || s.role === 'operator' || s.role !== '主播');
 
                 // Create merged schedule object
@@ -1075,7 +1075,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     brand_name: group.brand_name,
                     brand_color: group.brand_color,
                     is_merged: true,
-                    anchors: anchors,
+                    streamers: streamers,
                     operators: operators,
                     all_schedules: schedules
                 };
@@ -1107,9 +1107,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 merged.duration = (endMinutes - startMinutes) / 60;
 
                 // Determine primary person name for display
-                if (anchors.length > 0) {
-                    merged.person_name = anchors[0].person_name;
-                    merged.person_nick_name = anchors[0].person_nick_name;
+                if (streamers.length > 0) {
+                    merged.person_name = streamers[0].person_name;
+                    merged.person_nick_name = streamers[0].person_nick_name;
                 } else if (operators.length > 0) {
                     merged.person_name = operators[0].person_name;
                     merged.person_nick_name = operators[0].person_nick_name;
@@ -1392,6 +1392,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Drag and drop functionality - 統一的 dragstart 監聽器
                 scheduleItem.addEventListener('dragstart', function(e) {
+                    isDragging = true; // Set dragging flag
                     console.log('=== DRAGSTART EVENT ===');
                     console.log('Schedule:', schedule.person_name);
                     console.log('hasConflict:', schedule.hasConflict);
@@ -1471,6 +1472,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     this.style.opacity = '1';
                     this.style.zIndex = '10';
 
+                    // Reset dragging flag after a short delay to allow click event to check it
+                    setTimeout(() => {
+                        isDragging = false;
+                    }, 100);
+
                     // 恢復衝突項目的動畫
                     if (schedule.hasConflict) {
                         this.style.animation = 'conflict-pulse 2s infinite';
@@ -1504,8 +1510,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Handle merged schedule display
                 if (schedule.is_merged) {
-                    // Merged schedule - show anchors and operators
-                    const anchors = schedule.anchors || [];
+                    // Merged schedule - show streamers and operators
+                    const streamers = schedule.streamers || [];
                     const operators = schedule.operators || [];
 
                     // Brand name (primary for merged)
@@ -1525,11 +1531,11 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
                     content.appendChild(brandName);
 
-                    // Anchors section
-                    if (anchors.length > 0) {
-                        const anchorSection = document.createElement('div');
-                        anchorSection.className = 'schedule-anchors';
-                        anchorSection.style.cssText = `
+                    // Streamers section
+                    if (streamers.length > 0) {
+                        const streamerSection = document.createElement('div');
+                        streamerSection.className = 'schedule-streamers';
+                        streamerSection.style.cssText = `
                     font-size: 9px;
                     font-weight: 500;
                     line-height: 1.1;
@@ -1537,9 +1543,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     color: rgba(255, 255, 255, 0.95);
                 `;
 
-                        const anchorNames = anchors.map(a => a.person_nick_name || a.person_name).join(', ');
-                        anchorSection.innerHTML = `<span style="opacity: 0.8;">主播:</span> ${anchorNames}`;
-                        content.appendChild(anchorSection);
+                        const streamerNames = streamers.map(a => a.person_nick_name || a.person_name).join(', ');
+                        streamerSection.innerHTML = `<span style="opacity: 0.8;">主播:</span> ${streamerNames}`;
+                        content.appendChild(streamerSection);
                     }
 
                     // Operators section
@@ -1652,6 +1658,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 scheduleItem.appendChild(content);
 
+                // Add click event handler for navigation to schedule edit page
+                let isDragging = false;
+                let dragStartTime = 0;
+
+                scheduleItem.addEventListener('mousedown', function(e) {
+                    isDragging = false;
+                    dragStartTime = Date.now();
+                });
+
+                scheduleItem.addEventListener('click', function(e) {
+                    // Prevent click during drag operations or if dragging just occurred
+                    const timeSinceMouseDown = Date.now() - dragStartTime;
+                    if (e.defaultPrevented || isDragging || timeSinceMouseDown > 300) {
+                        return;
+                    }
+
+                    // If it's a merged schedule, navigate to date form with the date
+                    if (schedule.is_merged) {
+                        const dateParam = encodeURIComponent(schedule.date || getCurrentDateString());
+                        window.location.href = `/date-form/?date=${dateParam}`;
+                    } else {
+                        // For single schedules, navigate to edit page
+                        const scheduleId = schedule.id;
+                        const dateParam = encodeURIComponent(schedule.date || getCurrentDateString());
+                        window.location.href = `/schedule/edit/${scheduleId}/?date=${dateParam}`;
+                    }
+                });
+
                 // Enhanced hover tooltip with better design and readability
                 scheduleItem.addEventListener('mouseenter', function() {
                             const tooltip = document.createElement('div');
@@ -1695,8 +1729,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (schedule.is_merged) {
                 let personnelHTML = '';
                 
-                // Anchors section
-                if (schedule.anchors && schedule.anchors.length > 0) {
+                // Streamers section
+                if (schedule.streamers && schedule.streamers.length > 0) {
                     personnelHTML += `
                         <div class="personnel-group">
                             <div class="group-header">
@@ -1704,10 +1738,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                             <div class="group-members">
                     `;
-                    schedule.anchors.forEach(anchor => {
-                        const displayName = anchor.person_nick_name ?
-                            `${anchor.person_name} <span class="nickname">(${anchor.person_nick_name})</span>` :
-                            anchor.person_name;
+                    schedule.streamers.forEach(streamer => {
+                        const displayName = streamer.person_nick_name ?
+                            `${streamer.person_name} <span class="nickname">(${streamer.person_nick_name})</span>` :
+                            streamer.person_name;
                         personnelHTML += `<div class="member-item">${displayName}</div>`;
                     });
                     personnelHTML += '</div></div>';

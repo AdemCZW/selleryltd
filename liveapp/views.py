@@ -19,7 +19,7 @@ def person_list(request):
     current_year, current_month = today.year, today.month
     window_start = today - datetime.timedelta(days=29)
     # one query for persons
-    persons = list(Person.objects.all())
+    persons = list(Person.objects.all().order_by('name'))
     # fetch relevant schedules in bulk
     month_scheds = list(Schedule.objects.filter(date__year=current_year, date__month=current_month))
     window_scheds = list(Schedule.objects.filter(date__range=(window_start, today)))
@@ -90,7 +90,18 @@ def invoice_create(request):
         formset = InvoiceItemFormSet()
     # include all persons for bank details lookup
     # prepare person choices and selected bank info
-    persons = Person.objects.all().order_by('name')  # 按姓名排序
+    persons = Person.objects.all().order_by('name')
+    
+    # Group persons by first letter for alphabet separation
+    from collections import OrderedDict
+    persons_by_letter = OrderedDict()
+    
+    for person in persons:
+        first_letter = person.name[0].upper() if person.name else 'Z'
+        if first_letter not in persons_by_letter:
+            persons_by_letter[first_letter] = []
+        persons_by_letter[first_letter].append(person)
+    
     companies = Company.objects.all()
     
     # prepare JSON data for frontend bank info lookup
@@ -116,6 +127,7 @@ def invoice_create(request):
         'form': form,
         'formset': formset,
         'persons': persons,
+        'persons_by_letter': persons_by_letter,
         'companies': companies,
         'selected_person': selected_person,
         'bank': bank,
@@ -127,7 +139,18 @@ def invoice_create(request):
 
 
 def calendar(request):
-    persons = Person.objects.all().order_by('name')  # 按姓名排序
+    persons = Person.objects.all().order_by('name')
+    
+    # Group persons by first letter for alphabet separation
+    from collections import OrderedDict
+    persons_by_letter = OrderedDict()
+    
+    for person in persons:
+        first_letter = person.name[0].upper() if person.name else 'Z'
+        if first_letter not in persons_by_letter:
+            persons_by_letter[first_letter] = []
+        persons_by_letter[first_letter].append(person)
+    
     selected_date = request.GET.get('date')
     if selected_date:
         try:
@@ -213,6 +236,7 @@ def calendar(request):
     
     return render(request, 'liveapp/date_form.html', {
         'persons': persons,
+        'persons_by_letter': persons_by_letter,
         'schedules': schedules,
         'schedules_by_date': dict(schedules_by_date),
         'brands': brands,
@@ -296,7 +320,7 @@ def cancel_schedule(request):
             late_hours = data.get('late_hours', 0)
             reason = data.get('reason')
             # 新增：獲取選中的角色列表
-            selected_roles = data.get('selected_roles', [])  # ['anchor', 'operator']
+            selected_roles = data.get('selected_roles', [])  # ['streamer', 'operator']
 
             if not date_str or not room:
                 return JsonResponse({'success': False, 'error': '缺少日期或房間資訊'}, status=400)
@@ -325,12 +349,12 @@ def cancel_schedule(request):
                 
                 # 檢查當前排班的角色是否在選中列表中
                 schedule_role = schedule.role.lower()
-                is_anchor = schedule_role in ['主播', 'anchor', 'streamer']
+                is_streamer = schedule_role in ['主播', 'streamer', 'anchor']
                 is_operator = schedule_role in ['運營', 'operator']
                 
                 # 判斷是否應該影響這個人
                 should_affect = False
-                if is_anchor and 'anchor' in selected_roles:
+                if is_streamer and 'streamer' in selected_roles:
                     should_affect = True
                 elif is_operator and 'operator' in selected_roles:
                     should_affect = True

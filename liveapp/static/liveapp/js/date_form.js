@@ -1,3 +1,36 @@
+// Function to determine time period (Morning/Afternoon/Evening)
+function getTimePeriod(timeString) {
+    if (!timeString) return { period: '', color: '', icon: '', bgColor: '', class: '' };
+
+    const hour = parseInt(timeString.split(':')[0]);
+
+    if (hour >= 6 && hour < 12) {
+        return {
+            period: 'M',
+            color: '#ff4500', // Deep orange
+            icon: '🌅',
+            bgColor: 'rgba(255, 69, 0, 0.25)',
+            class: 'morning'
+        };
+    } else if (hour >= 12 && hour < 18) {
+        return {
+            period: 'A',
+            color: '#0066cc', // Strong blue
+            icon: '☀️',
+            bgColor: 'rgba(0, 102, 204, 0.25)',
+            class: 'afternoon'
+        };
+    } else {
+        return {
+            period: 'E',
+            color: '#800080', // Deep purple
+            icon: '🌙',
+            bgColor: 'rgba(128, 0, 128, 0.25)',
+            class: 'evening'
+        };
+    }
+}
+
 function showNotification(message, type = "success") {
     const notification = document.getElementById("notification");
     const notificationText = document.getElementById("notification-text");
@@ -52,7 +85,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const employeeScheduleBtn = document.getElementById("show-employee-schedule");
             const employeeScheduleClose = document.getElementById("employee-sidebar-close");
             const employeeScheduleSelect = document.getElementById("employee-schedule-select");
-            const timelineBtn = document.getElementById("show-timeline-view");
             const otherReasonContainer = document.getElementById(
                 "other-reason-container"
             );
@@ -106,10 +138,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         // Get selected roles for late hours
                         let selectedRoles = [];
                         if (reason === "late") {
-                            const anchorChecked = document.getElementById("cancel-role-anchor").checked;
+                            const streamerChecked = document.getElementById("cancel-role-streamer").checked;
                             const operatorChecked = document.getElementById("cancel-role-operator").checked;
 
-                            if (anchorChecked) selectedRoles.push("anchor");
+                            if (streamerChecked) selectedRoles.push("streamer");
                             if (operatorChecked) selectedRoles.push("operator");
 
                             // Validation: at least one role must be selected for late hours
@@ -326,15 +358,22 @@ document.addEventListener("DOMContentLoaded", () => {
                                 const tr = document.createElement("tr");
                                 const roleClass =
                                     (s.role === "Streamer" || s.role === "主播") ?
-                                    "anchor-role" :
+                                    "streamer-role" :
                                     (s.role === "Operations" || s.role === "運營") ?
                                     "operator-role" :
                                     "";
+                                
+                                // Get time period information
+                                const timePeriod = getTimePeriod(s.start_time);
+                                const periodBadge = timePeriod.period ? 
+                                    `<span class="time-period-badge" style="background-color: ${timePeriod.color}; color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.75em; font-weight: 600; margin-right: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); letter-spacing: 0.5px;">${timePeriod.icon} ${timePeriod.period}</span>` : 
+                                    '';
+                                
                                 tr.innerHTML = `
                                         <td>${s.person_name}</td>
                                         <td>${s.brand_name}</td>
                                         <td class="${roleClass}">${s.role}</td>
-                                        <td>${s.start_time} - ${s.end_time}</td>
+                                        <td>${periodBadge}${s.start_time} - ${s.end_time}</td>
                                         <td>${s.duration.toFixed(2)}</td>
                                         <td>${s.room}</td>
                                         <td>
@@ -430,7 +469,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 if (selectedBrandText) {
                                     list = list.filter(s => s.brand_name === selectedBrandText);
                                 }
-                                const anchorNames =
+                                const streamerNames =
                                     list
                                     .filter((s) => s.role === "Streamer" || s.role === "主播")
                                     .map((s) => `${s.person_name} (Room${s.room})`)
@@ -463,12 +502,34 @@ document.addEventListener("DOMContentLoaded", () => {
                                         roomTimeGroups[groupKey].schedules.push(s);
                                     });
                                     
-                                    // Sort groups by room first, then by time
+                                    // Sort groups by time period first (Morning, Afternoon, Evening), then by time, then by room
                                     const sortedGroups = Object.values(roomTimeGroups).sort((a, b) => {
-                                        if (a.room !== b.room) {
-                                            return a.room - b.room;
+                                        // Get time period priority for sorting
+                                        const getTimePeriodPriority = (timeKey) => {
+                                            const startTime = timeKey.split('-')[0];
+                                            const timePeriod = getTimePeriod(startTime);
+                                            if (timePeriod.period === 'M') return 0;
+                                            if (timePeriod.period === 'A') return 1;
+                                            if (timePeriod.period === 'E') return 2;
+                                            return 3; // fallback for any other period
+                                        };
+                                        
+                                        const periodA = getTimePeriodPriority(a.timeKey);
+                                        const periodB = getTimePeriodPriority(b.timeKey);
+                                        
+                                        // First sort by time period (Morning -> Afternoon -> Evening)
+                                        if (periodA !== periodB) {
+                                            return periodA - periodB;
                                         }
-                                        return a.timeKey.localeCompare(b.timeKey);
+                                        
+                                        // Then sort by start time within the same period
+                                        const timeComparison = a.timeKey.localeCompare(b.timeKey);
+                                        if (timeComparison !== 0) {
+                                            return timeComparison;
+                                        }
+                                        
+                                        // Finally sort by room number if time is the same
+                                        return a.room - b.room;
                                     });
                                     
                                     let html = "";
@@ -477,7 +538,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                                 const timeSlot = group.timeKey;
                                                 const groupSchedules = group.schedules;
                                                 
-                                                const anchors =
+                                                const streamers =
                                                     groupSchedules
                                                     .filter((s) => (s.role === "Streamer" || s.role === "主播"))
                                                     .map((s) => `${s.person_name}`)
@@ -489,23 +550,30 @@ document.addEventListener("DOMContentLoaded", () => {
                                                     .join("<br>") || "None";
 
                                                 // Get streamer's time as reference time
-                                                const anchorTimes = groupSchedules.filter(
+                                                const streamerTimes = groupSchedules.filter(
                                                     (s) => (s.role === "Streamer" || s.role === "主播")
                                                 );
                                                 const timeInfo = timeSlot;
 
-                                                // Display time next to room number
-                                                const roomTitle = `Room ${room} (${timeInfo})`;
+                                                // Get time period for the schedule
+                                                const startTime = timeSlot.split('-')[0];
+                                                const timePeriod = getTimePeriod(startTime);
+                                                const periodBadge = timePeriod.period ? 
+                                                    `<span class="time-period-badge" style="background-color: ${timePeriod.color}; color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.8em; font-weight: 600; margin-left: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); letter-spacing: 0.5px;">${timePeriod.icon} ${timePeriod.period}</span>` : 
+                                                    '';
+
+                                                // Simplified title: Room number + time + period badge in one compact line
+                                                const roomTitle = `Room ${room} ${timeInfo}${periodBadge}`;
 
                                                 // Check for missing information and create warning messages
                                                 const warnings = [];
-                                                const hasAnchors = groupSchedules.some(s => s.role === "Streamer" || s.role === "主播");
+                                                const hasStreamers = groupSchedules.some(s => s.role === "Streamer" || s.role === "主播");
                                                 const hasOperators = groupSchedules.some(s => s.role === "Operations" || s.role === "運營");
                                                 const hasBrand = groupSchedules.some(s => s.brand_name && s.brand_name.trim() !== '');
                                                 const hasTime = timeSlot && timeSlot !== '-';
 
                                                 if (!hasTime) warnings.push("⏰ 缺少時間資訊");
-                                                if (!hasAnchors) warnings.push("👤 缺少主播");
+                                                if (!hasStreamers) warnings.push("👤 缺少主播");
                                                 if (!hasOperators) warnings.push("⚙️ 缺少運營");
                                                 if (!hasBrand) warnings.push("🏷️ 缺少品牌");
 
@@ -522,27 +590,37 @@ document.addEventListener("DOMContentLoaded", () => {
                                                 }
                                                 
                                                 const warningIcon = warnings.length > 0 ? 
-                                                    `<span class="warning-alert" title="⚠️ 警告:\\n${warningTitle}" style="position:absolute;top:-8px;left:-8px;width:20px;height:20px;background:${warningColor};border:2px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:bold;z-index:15;cursor:help;animation:${warningAnimation} 2s infinite;">!</span>` : 
+                                                    `<span class="warning-alert" title="⚠️ 警告:\\n${warningTitle}" style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;background:${warningColor};border:2px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:bold;z-index:16;cursor:help;animation:${warningAnimation} 2s infinite;">!</span>` : 
                                                     "";
 
                                                 // Get current playing brand for this room-time group
                                                 const brandName = groupSchedules.length > 0 ? groupSchedules[0].brand_name : '';
                                                 const brandColor = groupSchedules.length > 0 ? groupSchedules[0].brand_color : '';
 
+                                                // Add period-specific background styling
+                                                const periodBackgroundStyle = timePeriod.bgColor ? 
+                                                    `background: linear-gradient(135deg, ${timePeriod.bgColor}, rgba(255,255,255,0.9)); border-left: 4px solid ${timePeriod.color};` : 
+                                                    '';
+
+                                                // Room number in top-left corner (remove "Room" text), warning icon in top-right
+                                                const roomNumberBadge = `<span class="room-number-badge" style="position:absolute;top:-8px;left:-8px;background:var(--primary-color);color:white;padding:4px 8px;border-radius:12px;font-size:0.9em;font-weight:bold;border:2px solid #fff;z-index:15;box-shadow:0 2px 4px rgba(0,0,0,0.2);">${room}</span>`;
+                                                const timeWithPeriod = `<div style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px 0;">${timeInfo}${periodBadge}</div>`;
+
                                                 html += `
-                                        <div class="room-schedule-block room-${room}" data-room="${room}" data-date="${ds}">
+                                        <div class="room-schedule-block room-${room} period-${timePeriod.class}" data-room="${room}" data-date="${ds}" style="${periodBackgroundStyle}">
+                                            ${roomNumberBadge}
                                             ${warningIcon}
-                                            <span class="close-btn" style="position:absolute;bottom:-8px;right:-8px;width:24px;height:24px;background-color:rgba(0,0,0,0.6);border:2px solid var(--tech-accent1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--tech-accent1);cursor:pointer;z-index:10;">&times;</span>
+                                            <span class="close-btn" style="position:absolute;bottom:-8px;right:-8px;width:24px;height:24px;background-color:rgba(0,0,0,0.6);border:2px solid var(--tech-accent1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--tech-accent1);cursor:pointer;z-index:12;">&times;</span>
                                             <!-- Open cancel stream sidebar -->
-                                            <div class="room-header">${roomTitle}</div>
+                                            <div class="room-time-header" style="font-size: 0.9em; font-weight: 600; text-align: center; margin-top: 8px; color: #2c3e50;">
+                                                ${timeWithPeriod}
+                                            </div>
                                             <div class="roles-container">
                                                 <div class="role-column">
-                                                    <strong class="anchor-role">Streamers</strong>
-                                                    <div class="role-content anchor-content">${anchors}</div>
+                                                    <div class="role-content streamer-content">${streamers}</div>
                                                 </div>
                                                 <div class="role-separator"></div>
                                                 <div class="role-column">
-                                                    <strong class="operator-role">Operations</strong>
                                                     <div class="role-content operator-content">${ops}</div>
                                                 </div>
                                             </div>
@@ -800,7 +878,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         const tr = document.createElement("tr");
                         const roleClass =
                             (s.role === "Streamer" || s.role === "主播") ?
-                            "anchor-role" :
+                            "streamer-role" :
                             (s.role === "Operations" || s.role === "運營") ?
                             "operator-role" :
                             "";
@@ -950,45 +1028,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 clearEmployeeScheduleData();
             }
         });
-    }
-
-    // Timeline button functionality
-    if (timelineBtn) {
-        console.log('Timeline button found, adding event listener');
-        timelineBtn.addEventListener('click', function(e) {
-            console.log('Timeline button clicked');
-            e.preventDefault(); // 防止預設行為
-            
-            // Get current selected date from various sources
-            let targetDate = '';
-            
-            // First try to get from URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            const dateParam = urlParams.get('date');
-            if (dateParam) {
-                targetDate = dateParam;
-                console.log('Got date from URL:', targetDate);
-            } else {
-                // Try to get from selected date element
-                const selectedDateElement = document.getElementById('selected-date');
-                if (selectedDateElement && selectedDateElement.textContent.trim()) {
-                    targetDate = selectedDateElement.textContent.trim();
-                    console.log('Got date from selected element:', targetDate);
-                } else {
-                    // Use today's date as fallback
-                    const today = new Date();
-                    targetDate = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-                    console.log('Using today date as fallback:', targetDate);
-                }
-            }
-            
-            // Navigate to timeline view with selected date
-            const timelineUrl = `/timeline/?date=${encodeURIComponent(targetDate)}`;
-            console.log('Navigating to:', timelineUrl);
-            window.location.href = timelineUrl;
-        });
-    } else {
-        console.log('Timeline button not found');
     }
 }); // end DOMContentLoaded listener
 

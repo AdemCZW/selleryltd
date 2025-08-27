@@ -17,23 +17,6 @@
     --font-main: 'Microsoft JhengHei', sans-serif;
 }
 
-/* Employee dropdown alphabetical grouping */
-select optgroup {
-    font-weight: bold;
-    color: #6c757d;
-    font-size: 0.9em;
-    margin-top: 0.3em;
-    background: #f8f9fa;
-    font-style: italic;
-}
-
-select optgroup option {
-    padding-left: 1.2em;
-    font-weight: normal;
-    font-style: normal;
-    color: #212529;
-}
-
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 * {
     font-family: var(--font-main) !important;
@@ -519,30 +502,6 @@ body {
     gap: 16px;
     width: 100%;
     align-items: stretch;
-    /* GPU 加速優化 */
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    perspective: 1000;
-}
-
-
-/* 優化動畫性能 - GPU 加速 */
-.brand-hours-card,
-.room-utilization-card,
-.brand-hours-item,
-.room-utilization-item,
-.room-progress-fill {
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-font-smoothing: subpixel-antialiased;
-}
-
-/* 減少不必要的重繪 */
-.brand-hours-card::before,
-.room-utilization-card::before,
-.room-progress-fill::after {
-    backface-visibility: hidden;
-    transform: translateZ(0);
 }
 
 
@@ -559,13 +518,12 @@ body {
     position: relative;
     overflow: hidden;
     color: #495057;
-    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s ease-out;
-    will-change: transform;
+    transition: all 0.2s ease-out;
 }
 
 .brand-hours-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     border-color: #007bff;
 }
 
@@ -576,9 +534,8 @@ body {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
     transition: left 0.4s ease-out;
-    will-change: left;
 }
 
 .brand-hours-card:hover::before {
@@ -622,8 +579,8 @@ body {
     font-size: 0.75rem;
     font-weight: 600;
     color: #495057;
-    transition: transform 0.2s ease-out, background-color 0.2s ease-out, border-color 0.2s ease-out, color 0.2s ease-out;
-    will-change: transform;
+    transition: all 0.15s ease-out;
+    will-change: transform, background-color;
 }
 
 .brand-hours-item:hover {
@@ -671,13 +628,12 @@ body {
     position: relative;
     overflow: hidden;
     color: white;
-    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-    will-change: transform;
+    transition: all 0.2s ease-out;
 }
 
 .room-utilization-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(255, 126, 95, 0.35);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 48px rgba(255, 126, 95, 0.4);
 }
 
 .room-utilization-card::before {
@@ -687,9 +643,8 @@ body {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
-    transition: left 0.4s ease-out;
-    will-change: left;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s ease;
 }
 
 .room-utilization-card:hover::before {
@@ -720,29 +675,6 @@ body {
     gap: 6px;
     max-height: 330px;
     overflow-y: auto;
-    /* 優化滾動性能 */
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
-}
-
-/* Webkit 滾動條樣式優化 */
-.room-utilization-list::-webkit-scrollbar {
-    width: 4px;
-}
-
-.room-utilization-list::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
-}
-
-.room-utilization-list::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
-}
-
-.room-utilization-list::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.5);
 }
 
 .room-utilization-item {
@@ -751,14 +683,14 @@ body {
     justify-content: space-between;
     padding: 6px 0;
     font-size: 0.75rem;
-    transition: transform 0.2s ease-out, padding-left 0.2s ease-out;
+    transition: all 0.15s ease;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     will-change: transform;
 }
 
 .room-utilization-item:hover {
-    transform: translateX(4px);
-    padding-left: 6px;
+    transform: translateX(6px);
+    padding-left: 8px;
 }
 
 .room-utilization-item:last-child {
@@ -805,7 +737,7 @@ body {
     height: 100%;
     background: linear-gradient(90deg, var(--success-color), var(--primary-color));
     border-radius: 3px;
-    transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     will-change: width;
 }
@@ -814,25 +746,19 @@ body {
     content: '';
     position: absolute;
     top: 0;
-    left: -30%;
-    width: 30%;
+    left: -50%;
+    width: 50%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    animation: shimmerOptimized 3s infinite;
-    will-change: left;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    animation: shimmer 2s infinite;
 }
 
-@keyframes shimmerOptimized {
+@keyframes shimmer {
     0% {
-        left: -30%;
-        opacity: 0;
-    }
-    50% {
-        opacity: 1;
+        left: -50%;
     }
     100% {
         left: 100%;
-        opacity: 0;
     }
 }
 
@@ -913,6 +839,7 @@ body {
 }
 
 #employee-select,
+#employee-schedule-select,
 #room-input,
 input[type="time"] {
     background-color: var(--card-bg-color) !important;
@@ -924,7 +851,30 @@ input[type="time"] {
     transition: border-color 0.3s, box-shadow 0.3s;
 }
 
+
+/* Employee select optgroup styling for alphabetical separation */
+
+#employee-select optgroup,
+#employee-schedule-select optgroup {
+    font-weight: bold;
+    font-size: 0.9em;
+    color: var(--primary-color) !important;
+    background-color: rgba(var(--primary-color-rgb), 0.1) !important;
+    padding: 4px 8px;
+    margin: 2px 0;
+    border-top: 1px solid var(--border-color);
+}
+
+#employee-select optgroup option,
+#employee-schedule-select optgroup option {
+    font-weight: normal;
+    padding-left: 16px;
+    color: var(--text-color) !important;
+    background-color: var(--card-bg-color) !important;
+}
+
 #employee-select:focus,
+#employee-schedule-select:focus,
 #room-input:focus,
 input[type="time"]:focus {
     border-color: var(--primary-color) !important;
@@ -1050,9 +1000,50 @@ a.text-danger:hover {
     margin-bottom: 6px;
     padding-bottom: 6px;
     border-bottom: 1px solid var(--border-color);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: var(--text-color);
     text-shadow: none;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    line-height: 1.2;
+}
+
+
+/* Room number badge in top-left corner */
+
+.room-number-badge {
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    background: var(--primary-color);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.9em;
+    font-weight: bold;
+    border: 2px solid #fff;
+    z-index: 15;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+}
+
+
+/* Time and period display */
+
+.room-time-header {
+    margin-top: 16px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.85rem;
+    color: var(--text-color);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 1.2;
 }
 
 .roles-container {
@@ -1081,8 +1072,8 @@ a.text-danger:hover {
     text-align: center;
 }
 
-.anchor-role,
-.anchor-content {
+.streamer-role,
+.streamer-content {
     color: var(--primary-color) !important;
     font-weight: 600;
     text-shadow: none;
@@ -1204,7 +1195,7 @@ a.text-danger:hover {
 .warning-alert {
     position: absolute;
     top: -8px;
-    left: -8px;
+    right: -8px;
     width: 20px;
     height: 20px;
     border-radius: 50%;
@@ -1214,7 +1205,7 @@ a.text-danger:hover {
     color: white;
     font-weight: bold;
     font-size: 12px;
-    z-index: 15;
+    z-index: 16;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     border: 2px solid white;
     animation: warningPulse 3s ease-in-out infinite;
@@ -1483,5 +1474,146 @@ a.text-danger:hover {
     .week-range-container::before {
         left: 8px;
         font-size: 0.8rem;
+    }
+}
+
+
+/* Time Period Styling with Enhanced Contrast - Compact Version */
+
+.time-period-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.75em;
+    font-weight: 600;
+    color: white !important;
+    margin-right: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    line-height: 1;
+}
+
+
+/* Time period specific room styling with strong contrast */
+
+.room-schedule-block.period-morning {
+    background: linear-gradient(135deg, rgba(255, 69, 0, 0.25), rgba(255, 255, 255, 0.9)) !important;
+    border-left: 4px solid #ff4500 !important;
+    box-shadow: 0 2px 8px rgba(255, 69, 0, 0.2);
+}
+
+.room-schedule-block.period-afternoon {
+    background: linear-gradient(135deg, rgba(0, 102, 204, 0.25), rgba(255, 255, 255, 0.9)) !important;
+    border-left: 4px solid #0066cc !important;
+    box-shadow: 0 2px 8px rgba(0, 102, 204, 0.2);
+}
+
+.room-schedule-block.period-evening {
+    background: linear-gradient(135deg, rgba(128, 0, 128, 0.25), rgba(255, 255, 255, 0.9)) !important;
+    border-left: 4px solid #800080 !important;
+    box-shadow: 0 2px 8px rgba(128, 0, 128, 0.2);
+}
+
+
+/* Enhanced hover effects for time periods */
+
+.room-schedule-block.period-morning:hover {
+    background: linear-gradient(135deg, rgba(255, 69, 0, 0.35), rgba(255, 255, 255, 0.9)) !important;
+    box-shadow: 0 4px 12px rgba(255, 69, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+.room-schedule-block.period-afternoon:hover {
+    background: linear-gradient(135deg, rgba(0, 102, 204, 0.35), rgba(255, 255, 255, 0.9)) !important;
+    box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+    transform: translateY(-2px);
+}
+
+.room-schedule-block.period-evening:hover {
+    background: linear-gradient(135deg, rgba(128, 0, 128, 0.35), rgba(255, 255, 255, 0.9)) !important;
+    box-shadow: 0 4px 12px rgba(128, 0, 128, 0.3);
+    transform: translateY(-2px);
+}
+
+
+/* Table row styling for time periods */
+
+tr.period-morning {
+    background: linear-gradient(135deg, rgba(255, 69, 0, 0.08), rgba(255, 255, 255, 0.95)) !important;
+}
+
+tr.period-afternoon {
+    background: linear-gradient(135deg, rgba(0, 102, 204, 0.08), rgba(255, 255, 255, 0.95)) !important;
+}
+
+tr.period-evening {
+    background: linear-gradient(135deg, rgba(128, 0, 128, 0.08), rgba(255, 255, 255, 0.95)) !important;
+}
+
+
+/* Responsive adjustments for time period badges */
+
+@media (max-width: 768px) {
+    .time-period-badge {
+        font-size: 0.65em;
+        padding: 1px 4px;
+        margin-right: 2px;
+        gap: 1px;
+    }
+    .room-header {
+        font-size: 0.85em;
+        gap: 2px;
+    }
+    .room-number-badge {
+        font-size: 0.8em;
+        padding: 3px 6px;
+        top: -6px;
+        left: -6px;
+    }
+    .room-time-header {
+        font-size: 0.75em;
+        margin-top: 12px;
+    }
+    .warning-alert {
+        width: 18px !important;
+        height: 18px !important;
+        font-size: 10px !important;
+        top: -6px !important;
+        right: -6px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .time-period-badge {
+        font-size: 0.6em;
+        padding: 1px 3px;
+        margin-right: 2px;
+        border-radius: 6px;
+    }
+    .room-header {
+        font-size: 0.8em;
+        gap: 2px;
+    }
+    .room-number-badge {
+        font-size: 0.75em;
+        padding: 2px 5px;
+        top: -5px;
+        left: -5px;
+    }
+    .room-time-header {
+        font-size: 0.7em;
+        margin-top: 10px;
+    }
+    .warning-alert {
+        width: 16px !important;
+        height: 16px !important;
+        font-size: 9px !important;
+        top: -5px !important;
+        right: -5px !important;
     }
 }
