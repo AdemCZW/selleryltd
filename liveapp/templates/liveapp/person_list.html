@@ -153,7 +153,7 @@
 </style>
 {% endblock %} {% block content %}
 <div class="container mt-5">
-    <h1 class="mb-4">員工名單</h1>
+    <h1 class="mb-4">Employee List</h1>
     <div class="employee-table-container">
         <!-- Fixed Header -->
         <div class="employee-table-header">
@@ -197,23 +197,23 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="11">無員工資料。</td>
+                        <td colspan="11">None</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-    <h3 class="mt-4">發票列表</h3>
+    <h3 class="mt-4">Invoice List</h3>
     <div class="table-responsive">
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>收據編號</th>
-                    <th>員工</th>
-                    <th>公司</th>
-                    <th>日期</th>
-                    <th>總金額</th>
+                    <th>Receipt Number</th>
+                    <th>Employee</th>
+                    <th>Company</th>
+                    <th>Date</th>
+                    <th>Total Amount</th>
                 </tr>
             </thead>
             <tbody>
@@ -227,7 +227,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5">無發票資料。</td>
+                    <td colspan="5">None</td>
                 </tr>
                 {% endfor %}
             </tbody>

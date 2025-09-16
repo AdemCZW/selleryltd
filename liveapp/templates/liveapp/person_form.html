@@ -70,11 +70,10 @@
 {% endblock %} {% block content %}
 <a href="{% url 'person_list' %}" class="back-btn" title="回到列表">&#x1F3E0;</a>
 <div class="container mt-4">
-    <h1 class="mb-4">新增員工</h1>
     <form method="post">
         {% csrf_token %} {{ form.as_p }}
-        <button type="submit" class="btn btn-primary mb-3">新增員工</button>
-        <a href="{% url 'person_list' %}" class="btn btn-secondary mb-3 ms-2">取消</a>
+        <button type="submit" class="btn btn-primary mb-3">Add</button>
+        <a href="{% url 'person_list' %}" class="btn btn-secondary mb-3 ms-2">Cancel</a>
     </form>
 </div>
 {% endblock %} {% block extra_js %}

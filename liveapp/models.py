@@ -108,30 +108,30 @@ class Brand(models.Model):
     name = models.CharField(max_length=100)
     # 顏色選項，儲存 HEX 色碼
     color = models.CharField(
-        max_length=7, default='#000000', help_text='選擇顏色 HEX 編碼')
+        max_length=7, default='#000000', help_text='Color')
     # 負責人 (Person)
     responsible = models.ForeignKey(
         Person,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        verbose_name='負責人'
+        verbose_name='Manager'
     )
     # 合作時數 (小時)
     coop_hours = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         default=0.00,
-        verbose_name='合作時數(30天/單位)'
+        verbose_name='Range(30/day)'
     )
     # 合作期間開始日期
     start_date = models.DateField(
-        verbose_name='開始日期',
+        verbose_name='Start date',
         default=timezone.localdate
     )
     # 合作期間結束日期
     end_date = models.DateField(
-        verbose_name='結束日期',
+        verbose_name='End date',
         default=timezone.localdate
     )
 
